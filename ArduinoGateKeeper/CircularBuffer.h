@@ -1,4 +1,4 @@
-#include <algorithm>
+
 #ifndef __ARDUINO_GATEKEEPER_CIRC_BUFFER__
 #define __ARDUINO_GATEKEEPER_CIRC_BUFFER__
 

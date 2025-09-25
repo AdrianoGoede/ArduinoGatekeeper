@@ -11,10 +11,10 @@
 #define ACCESS_CONTROL_TASK_PRIORITY    3
 #define ACCESS_CONTROL_TASK_STACK_DEPTH 512
 
-#define WIFI_SSID                       ""
-#define WIFI_PASSWORD                   ""
+#define WIFI_SSID                       "ZTE_2.4G_3RDgHj"
+#define WIFI_PASSWORD                   "eWiTGqhn"
 #define NTP_SERVER_URL                  "europe.pool.ntp.org"
-#define MQTT_BROKER_ADDRESS             ""
+#define MQTT_BROKER_ADDRESS             "192.168.1.11"
 #define MQTT_BROKER_PORT                1883
 
 #define TIME_OFFSET                     0

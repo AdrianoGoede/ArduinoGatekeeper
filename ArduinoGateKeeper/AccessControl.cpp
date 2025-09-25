@@ -1,4 +1,3 @@
-#include "ArduinoJson/Deserialization/DeserializationError.hpp"
 #include <cstdio>
 #include <SPI.h>
 #include <MFRC522.h>

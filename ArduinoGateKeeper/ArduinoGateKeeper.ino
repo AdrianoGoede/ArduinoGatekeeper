@@ -33,7 +33,7 @@ void accessControlTask(void* pvParameters) {
     AccessControlStatus status = AccessControl::handleAccessControl(timestamp);
     if (status != AccessControlStatus::Waiting) {
       digitalWrite((uint8_t)status, HIGH);
-      vTaskDelay(pdMS_TO_TICKS(LED_ON_INTERVAL));
+      vTaskDelay(pdMS_TO_TICKS(STATUS_LED_INTERVAL));
       digitalWrite((uint8_t)status, LOW);
     }
 
