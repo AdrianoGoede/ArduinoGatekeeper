@@ -4,7 +4,7 @@
 #include "AccessControl.h"
 #include "config.h"
 
-MFRC522 AccessControl::rfidReader(RFID_SS_PIN, RFID_RST_PIN);
+MFRC522 AccessControl::rfidReader(RFID_CS_PIN, RFID_RST_PIN);
 SemaphoreHandle_t AccessControl::semaphoreHandle;
 std::map<String, MFRC522::MIFARE_Key> AccessControl::authorizedUsers;
 CircularBuffer<String> AccessControl::logBuffer{ACTIVITY_LOG_BUFFER_SIZE};

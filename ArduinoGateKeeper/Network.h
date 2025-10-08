@@ -22,6 +22,8 @@ struct MqttMessage {
 class Network {
 private:
   static char strBuffer[STRING_BUFFER_SIZE];
+  static char statusTopic[TOPIC_STR_BUFFER_SIZE];
+  static char logTopic[TOPIC_STR_BUFFER_SIZE];
   static SemaphoreHandle_t semaphoreHandle;
   static std::queue<MqttMessage> messages;
   static WiFiUDP udpWifiClient;
@@ -32,6 +34,8 @@ private:
   static bool synchronizeClock();
   static bool connectMqttBroker();
   static void queueMessage(int msgSize);
+  static void publishMessage(const char* topic, const char* payload, bool retain = false);
+  static void publishLastWill(const char* topic, const char* payload, bool retain = false);
 public:
   static bool begin(SemaphoreHandle_t semaphore);
   static bool handleConnections();

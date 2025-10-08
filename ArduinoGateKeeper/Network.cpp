@@ -3,6 +3,8 @@
 #include "Network.h"
 
 char Network::strBuffer[STRING_BUFFER_SIZE];
+char Network::statusTopic[TOPIC_STR_BUFFER_SIZE];
+char Network::logTopic[TOPIC_STR_BUFFER_SIZE];
 SemaphoreHandle_t Network::semaphoreHandle;
 std::queue<MqttMessage> Network::messages;
 WiFiUDP Network::udpWifiClient;
@@ -12,6 +14,8 @@ MqttClient Network::mqttClient(Network::wifiClient);
 
 bool Network::begin(SemaphoreHandle_t semaphore) {
   semaphoreHandle = semaphore;
+  snprintf(statusTopic, TOPIC_STR_BUFFER_SIZE, DEVICE_STATUS_TOPIC, MQTT_DEVICE_ID);
+  snprintf(logTopic, TOPIC_STR_BUFFER_SIZE, ACTIVITY_LOG_TOPIC, MQTT_DEVICE_ID);
   return (connectWiFi() && synchronizeClock() && connectMqttBroker());
 }
 
@@ -74,6 +78,9 @@ bool Network::connectMqttBroker() {
   );
   Serial.print(strBuffer);
 
+  mqttClient.setId(MQTT_DEVICE_ID);
+  publishLastWill(statusTopic, "offline", true);
+
   if (!mqttClient.connect(MQTT_BROKER_ADDRESS, MQTT_BROKER_PORT)) {
     snprintf(
       strBuffer,
@@ -88,6 +95,8 @@ bool Network::connectMqttBroker() {
   mqttClient.onMessage(Network::queueMessage);
   mqttClient.subscribe(AUTHORIZED_USERS_ADD_TOPIC, MQTT_QOS_LEVEL);
   mqttClient.subscribe(AUTHORIZED_USERS_REMOVE_TOPIC, MQTT_QOS_LEVEL);
+
+  publishMessage(statusTopic, "online", true);
 
   Serial.println("Success!");
   return true;
@@ -111,6 +120,18 @@ void Network::queueMessage(int msgSize) {
     
     xSemaphoreGive(semaphoreHandle);
   }
+}
+
+void Network::publishMessage(const char* topic, const char* payload, bool retain) {
+  mqttClient.beginMessage(topic, retain, MQTT_QOS_LEVEL);
+  mqttClient.print(payload);
+  mqttClient.endMessage();
+}
+
+void Network::publishLastWill(const char* topic, const char* payload, bool retain) {
+  mqttClient.beginWill(topic, retain, MQTT_QOS_LEVEL);
+  mqttClient.print(payload);
+  mqttClient.endWill();
 }
 
 bool Network::handleConnections() {
@@ -145,8 +166,4 @@ MqttMessage Network::getNextMessage() {
   return message;
 }
 
-void Network::reportActivity(const String& payload) {
-  mqttClient.beginMessage(ACTIVITY_LOG_TOPIC, false, MQTT_QOS_LEVEL, false);
-  mqttClient.print(payload.c_str());
-  mqttClient.endMessage();
-}
+void Network::reportActivity(const String& payload) { publishMessage(strBuffer, payload.c_str()); }
