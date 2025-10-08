@@ -3,8 +3,6 @@
 #include "Network.h"
 
 char Network::strBuffer[STRING_BUFFER_SIZE];
-char Network::statusTopic[TOPIC_STR_BUFFER_SIZE];
-char Network::logTopic[TOPIC_STR_BUFFER_SIZE];
 SemaphoreHandle_t Network::semaphoreHandle;
 std::queue<MqttMessage> Network::messages;
 WiFiUDP Network::udpWifiClient;
@@ -14,8 +12,6 @@ MqttClient Network::mqttClient(Network::wifiClient);
 
 bool Network::begin(SemaphoreHandle_t semaphore) {
   semaphoreHandle = semaphore;
-  snprintf(statusTopic, TOPIC_STR_BUFFER_SIZE, DEVICE_STATUS_TOPIC, MQTT_DEVICE_ID);
-  snprintf(logTopic, TOPIC_STR_BUFFER_SIZE, ACTIVITY_LOG_TOPIC, MQTT_DEVICE_ID);
   return (connectWiFi() && synchronizeClock() && connectMqttBroker());
 }
 
@@ -79,7 +75,8 @@ bool Network::connectMqttBroker() {
   Serial.print(strBuffer);
 
   mqttClient.setId(MQTT_DEVICE_ID);
-  publishLastWill(statusTopic, "offline", true);
+  snprintf(strBuffer, STRING_BUFFER_SIZE, DEVICE_STATUS_TOPIC, MQTT_DEVICE_ID);
+  publishLastWill(strBuffer, "offline", true);
 
   if (!mqttClient.connect(MQTT_BROKER_ADDRESS, MQTT_BROKER_PORT)) {
     snprintf(
@@ -96,7 +93,7 @@ bool Network::connectMqttBroker() {
   mqttClient.subscribe(AUTHORIZED_USERS_ADD_TOPIC, MQTT_QOS_LEVEL);
   mqttClient.subscribe(AUTHORIZED_USERS_REMOVE_TOPIC, MQTT_QOS_LEVEL);
 
-  publishMessage(statusTopic, "online", true);
+  publishMessage(strBuffer, "online", true);
 
   Serial.println("Success!");
   return true;
@@ -166,4 +163,7 @@ MqttMessage Network::getNextMessage() {
   return message;
 }
 
-void Network::reportActivity(const String& payload) { publishMessage(strBuffer, payload.c_str()); }
+void Network::reportActivity(const String& payload) {
+  snprintf(strBuffer, STRING_BUFFER_SIZE, ACTIVITY_LOG_TOPIC, MQTT_DEVICE_ID);
+  publishMessage(strBuffer, payload.c_str());
+}

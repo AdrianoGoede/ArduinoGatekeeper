@@ -6,7 +6,6 @@
 #define RFID_RST_PIN                    9
 
 #define STRING_BUFFER_SIZE              200
-#define TOPIC_STR_BUFFER_SIZE           100
 #define NETWORK_TASK_PRIORITY           1
 #define NETWORK_TASK_STACK_DEPTH        512
 #define ACCESS_CONTROL_TASK_PRIORITY    3

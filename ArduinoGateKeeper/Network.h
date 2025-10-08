@@ -22,8 +22,6 @@ struct MqttMessage {
 class Network {
 private:
   static char strBuffer[STRING_BUFFER_SIZE];
-  static char statusTopic[TOPIC_STR_BUFFER_SIZE];
-  static char logTopic[TOPIC_STR_BUFFER_SIZE];
   static SemaphoreHandle_t semaphoreHandle;
   static std::queue<MqttMessage> messages;
   static WiFiUDP udpWifiClient;
