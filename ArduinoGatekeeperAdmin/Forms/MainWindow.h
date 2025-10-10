@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPieSeries>
+#include <QLineSeries>
+#include <QBarCategoryAxis>
 #include "../Models/GatekeeperModel.h"
 
 QT_BEGIN_NAMESPACE
@@ -9,6 +12,17 @@ namespace Ui {
 class MainWindow;
 }
 QT_END_NAMESPACE
+
+struct GrantedDeniedRatioChart {
+    QPieSlice* GrantedSlice = nullptr;
+    QPieSlice* DeniedSlice = nullptr;
+};
+
+struct TimeIntervalActivityChart {
+    QLineSeries* Series = nullptr;
+    QBarCategoryAxis* axisX = nullptr;
+    QBarCategoryAxis* axisY = nullptr;
+};
 
 class MainWindow : public QMainWindow
 {
@@ -25,5 +39,9 @@ private slots:
 private:
     Ui::MainWindow* ui;
     GatekeeperModel* _gatekeeperModel = nullptr;
+    GrantedDeniedRatioChart _grantedDeniedRationChart;
+    TimeIntervalActivityChart _timeIntervalActivityChart;
+    void setAccessStatusChart();
+    void setTimeIntervalActivityChart();
 };
 #endif // MAINWINDOW_H
