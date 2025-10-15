@@ -4,8 +4,10 @@
 #include <QMainWindow>
 #include <QPieSeries>
 #include <QLineSeries>
-#include <QBarCategoryAxis>
+#include <QValueAxis>
+#include <QDateTimeAxis>
 #include "../Models/GatekeeperModel.h"
+#include "LogExplorer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,9 +21,11 @@ struct GrantedDeniedRatioChart {
 };
 
 struct TimeIntervalActivityChart {
-    QLineSeries* Series = nullptr;
-    QBarCategoryAxis* axisX = nullptr;
-    QBarCategoryAxis* axisY = nullptr;
+    QLineSeries* GrantedSeries = nullptr;
+    QLineSeries* DeniedSeries = nullptr;
+    QDateTimeAxis* axisX = nullptr;
+    QValueAxis* axisY = nullptr;
+    uint32_t grantedCount = 0, deniedCount = 0;
 };
 
 class MainWindow : public QMainWindow
@@ -35,13 +39,17 @@ public:
 private slots:
     void handleConnectionStatusChange(bool isConnected);
     void handleModelMetricsChange(uint32_t connectedDevicesCount, uint32_t granted, uint32_t denied);
+    void handleNewLogEntry(const LogEntry& entry);
+    void handleActivityChartTimerTimeout();
 
 private:
     Ui::MainWindow* ui;
     GatekeeperModel* _gatekeeperModel = nullptr;
+    LogExplorer* _logExplorer = nullptr;
     GrantedDeniedRatioChart _grantedDeniedRationChart;
     TimeIntervalActivityChart _timeIntervalActivityChart;
     void setAccessStatusChart();
     void setTimeIntervalActivityChart();
+    void adjustTimeIntervalActivityChart(const QDateTime& timestamp);
 };
 #endif // MAINWINDOW_H
