@@ -23,6 +23,7 @@ set(PROJECT_SOURCES
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
     qt_add_executable(ArduinoGatekeeperAdmin
         MANUAL_FINALIZATION
@@ -38,6 +39,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         Forms/LogExplorer.ui
         Models/LogTableModel.h
         Models/LogTableModel.cpp
+        Models/LogFilterProxyModel.h Models/LogFilterProxyModel.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ArduinoGatekeeperAdmin APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -60,6 +62,7 @@ endif()
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt${QT_VERSION_MAJOR}::Mqtt)
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt${QT_VERSION_MAJOR}::Charts)
+target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt6::Core)
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt6::Core)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

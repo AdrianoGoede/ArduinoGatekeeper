@@ -5,6 +5,7 @@
 #include <QAbstractTableModel>
 #include "../Models/GatekeeperModel.h"
 #include "../Models/LogTableModel.h"
+#include "../Models/LogFilterProxyModel.h"
 
 namespace Ui {
     class LogExplorer;
@@ -24,6 +25,7 @@ public slots:
 private:
     Ui::LogExplorer *ui;
     LogTableModel* _logData = nullptr;
+    LogFilterProxyModel* _filterProxyModel = nullptr;
 };
 
 #endif // LOGEXPLORER_H

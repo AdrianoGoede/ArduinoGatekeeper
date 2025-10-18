@@ -1,23 +1,18 @@
 #ifndef LOGTABLEMODEL_H
 #define LOGTABLEMODEL_H
 
+#include "GatekeeperModel.h"
 #include <QAbstractTableModel>
 #include <QDateTime>
 #include <QString>
 #include <QList>
 
 enum LogTableModelColumns {
-    UserId = 0,
-    DeviceId = 1,
+    DeviceId = 0,
+    UserId = 1,
     Granted = 2,
     Timestamp = 3,
     ColumnCount
-};
-
-struct LogTableModelEntry {
-    QString deviceId, userId;
-    QDateTime timestamp;
-    bool granted;
 };
 
 class LogTableModel : public QAbstractTableModel
@@ -31,7 +26,7 @@ public:
     void addEntry(const QString& deviceId, const QString& userId, const QDateTime& timestamp, bool granted);
 
 private:
-    QList<LogTableModelEntry> _logEntries;
+    QList<LogEntry> _logEntries;
 };
 
 #endif // LOGTABLEMODEL_H
