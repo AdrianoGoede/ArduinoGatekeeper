@@ -2,7 +2,6 @@
 #define LOGEXPLORER_H
 
 #include <QDialog>
-#include <QAbstractTableModel>
 #include "../Models/GatekeeperModel.h"
 #include "../Models/LogTableModel.h"
 #include "../Models/LogFilterProxyModel.h"
@@ -21,6 +20,10 @@ public:
 
 public slots:
     void addLogEntry(const LogEntry& entry);
+
+private slots:
+    void handleTimestampFromFilter(const QDateTime& timestamp);
+    void handleTimestampToFilter(const QDateTime& timestamp);
 
 private:
     Ui::LogExplorer *ui;

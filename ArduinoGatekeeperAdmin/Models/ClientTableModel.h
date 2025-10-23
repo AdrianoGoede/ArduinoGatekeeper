@@ -1,32 +1,32 @@
-#ifndef LOGTABLEMODEL_H
-#define LOGTABLEMODEL_H
+#ifndef CLIENTTABLEMODEL_H
+#define CLIENTTABLEMODEL_H
 
 #include "GatekeeperModel.h"
 #include <QAbstractTableModel>
 #include <QDateTime>
 #include <QString>
 #include <QList>
+#include <QMap>
 
-enum LogTableModelColumns {
-    DeviceId = 0,
-    UserId = 1,
-    Granted = 2,
-    Timestamp = 3,
-    ColumnCount
+enum ClientTableModelColumns {
+    ClientId = 0,
+    CurrentStatus = 1,
+    LastChange = 2,
+    NumColumns
 };
 
-class LogTableModel : public QAbstractTableModel
+class ClientTableModel : public QAbstractTableModel
 {
 public:
-    explicit LogTableModel(QObject *parent = nullptr);
+    explicit ClientTableModel(QObject *parent = nullptr);
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-    void addEntry(const LogEntry& entry);
+    void addEntry(const DeviceStatusEntry& entry);
 
 private:
-    QList<LogEntry> _logEntries;
+    QMap<QString, DeviceStatusEntry> _clientEntries;
 };
 
-#endif // LOGTABLEMODEL_H
+#endif // CLIENTTABLEMODEL_H

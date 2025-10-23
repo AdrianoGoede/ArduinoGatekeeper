@@ -63,7 +63,7 @@ void GatekeeperModel::processDeviceStatusMessage(const QString& deviceId, const 
     int8_t status = QStringList(MQTT_DEVICE_STATUS_VALUES).indexOf(payload);
     if (status < 0) return;
 
-    DeviceStatusEntry entry { deviceId.trimmed(), (bool)status };
+    DeviceStatusEntry entry { deviceId.trimmed(), (bool)status, QDateTime::currentDateTime() };
     if (entry.online)
         _connectedDeviceIds.insert(entry.deviceId);
     else

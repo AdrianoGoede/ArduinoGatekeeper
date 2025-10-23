@@ -5,7 +5,7 @@
 #include <QChartView>
 #include <QTimer>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), _gatekeeperModel(new GatekeeperModel(this)), _logExplorer(new LogExplorer(this))
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), _gatekeeperModel(new GatekeeperModel(this)), _logExplorer(new LogExplorer(this)), _clientExplorer(new ClientExplorer(this))
 {
     ui->setupUi(this);
     ui->metricsLayout->setColumnStretch(0, 2);
@@ -21,9 +21,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(_gatekeeperModel, &GatekeeperModel::metricsUpdated, this, &MainWindow::handleModelMetricsChange);
     connect(_gatekeeperModel, &GatekeeperModel::newLogEntry, this, &MainWindow::handleNewLogEntry);
     connect(_gatekeeperModel, &GatekeeperModel::newLogEntry, _logExplorer, &LogExplorer::addLogEntry);
-    connect(ui->pbViewLogs, &QAbstractButton::clicked, _logExplorer, &QWidget::show);
+    connect(_gatekeeperModel, &GatekeeperModel::newDeviceStatusEntry, _clientExplorer, &ClientExplorer::addClientEntry);
+    connect(ui->pbLogExplorer, &QAbstractButton::clicked, _logExplorer, &QWidget::show);
+    connect(ui->pbClientsExplorer, &QAbstractButton::clicked, _clientExplorer, &QWidget::show);
 
-    _gatekeeperModel->connectToBroker("192.168.1.7", 1883);
+    _gatekeeperModel->connectToBroker("192.168.1.5", 1883);
 }
 
 MainWindow::~MainWindow() { delete ui; }

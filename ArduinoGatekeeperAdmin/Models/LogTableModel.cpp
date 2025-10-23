@@ -43,9 +43,9 @@ QVariant LogTableModel::headerData(int section, Qt::Orientation orientation, int
     }
 }
 
-void LogTableModel::addEntry(const QString &deviceId, const QString &userId, const QDateTime &timestamp, bool granted)
+void LogTableModel::addEntry(const LogEntry& entry)
 {
     beginInsertRows(QModelIndex(), _logEntries.count(), _logEntries.count());
-    _logEntries.append(LogEntry { deviceId, userId, timestamp, granted });
+    _logEntries.append(entry);
     endInsertRows();
 }

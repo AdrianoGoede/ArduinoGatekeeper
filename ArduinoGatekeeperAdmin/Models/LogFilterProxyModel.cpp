@@ -1,7 +1,7 @@
 #include "LogFilterProxyModel.h"
 #include "LogTableModel.h"
 
-LogFilterProxyModel::LogFilterProxyModel(QObject *parent) : QSortFilterProxyModel(parent) {}
+LogFilterProxyModel::LogFilterProxyModel(QObject *parent) : QSortFilterProxyModel(parent), _timestampFrom{QDateTime::fromSecsSinceEpoch(0)}, _timestampTo(QDateTime::fromSecsSinceEpoch(LONG_LONG_MAX)) {}
 
 void LogFilterProxyModel::setDeviceIdFilter(const QString& filter)
 {
@@ -38,23 +38,23 @@ QString LogFilterProxyModel::getAccessStatus() const { return _accessStatus; }
 
 void LogFilterProxyModel::setTimestampFrom(const QDateTime& timestamp)
 {
-    if (timestamp.toSecsSinceEpoch() != _timestampFrom) {
-        _timestampFrom = timestamp.toSecsSinceEpoch();
+    if (timestamp != _timestampFrom) {
+        _timestampFrom = timestamp;
         invalidateFilter();
     }
 }
 
-QDateTime LogFilterProxyModel::getTimestampFrom() const{ return QDateTime::fromMSecsSinceEpoch(_timestampFrom); }
+QDateTime LogFilterProxyModel::getTimestampFrom() const{ return _timestampFrom; }
 
-void LogFilterProxyModel::setTimestampTo(const QDateTime &timestamp)
+void LogFilterProxyModel::setTimestampTo(const QDateTime& timestamp)
 {
-    if (timestamp.toSecsSinceEpoch() != _timestampTo) {
-        _timestampTo = timestamp.toSecsSinceEpoch();
+    if (timestamp != _timestampTo) {
+        _timestampTo = timestamp;
         invalidateFilter();
     }
 }
 
-QDateTime LogFilterProxyModel::getTimestampTo() const { return QDateTime::fromMSecsSinceEpoch(_timestampTo); }
+QDateTime LogFilterProxyModel::getTimestampTo() const { return _timestampTo; }
 
 bool LogFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const
 {
@@ -71,9 +71,8 @@ bool LogFilterProxyModel::filterAcceptsRow(int sourceRow, const QModelIndex& sou
     if (!_accessStatus.isEmpty() && value.compare(_accessStatus, Qt::CaseSensitivity::CaseInsensitive) != 0) return false;
 
     dataIndex = sourceModel()->index(sourceRow, LogTableModelColumns::Timestamp, sourceParent);
-    qint64 epoch = sourceModel()->data(dataIndex).toDateTime().toSecsSinceEpoch();
-    if (_timestampFrom >= 0 && epoch <= _timestampFrom) return false;
-    if (_timestampTo >= 0 && epoch >= _timestampTo) return false;
+    QDateTime timestamp = sourceModel()->data(dataIndex).toDateTime();
+    if (timestamp < _timestampFrom || timestamp > _timestampTo) return false;
 
     return true;
 }

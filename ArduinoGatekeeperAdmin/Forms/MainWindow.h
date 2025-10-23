@@ -6,12 +6,13 @@
 #include <QLineSeries>
 #include <QValueAxis>
 #include <QDateTimeAxis>
-#include "../Models/GatekeeperModel.h"
 #include "LogExplorer.h"
+#include "ClientExplorer.h"
+#include "../Models/GatekeeperModel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
-class MainWindow;
+    class MainWindow;
 }
 QT_END_NAMESPACE
 
@@ -46,6 +47,7 @@ private:
     Ui::MainWindow* ui;
     GatekeeperModel* _gatekeeperModel = nullptr;
     LogExplorer* _logExplorer = nullptr;
+    ClientExplorer* _clientExplorer = nullptr;
     GrantedDeniedRatioChart _grantedDeniedRationChart;
     TimeIntervalActivityChart _timeIntervalActivityChart;
     void setAccessStatusChart();

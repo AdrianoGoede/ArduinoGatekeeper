@@ -2,12 +2,14 @@
 #define GATEKEEPERMODEL_H
 
 #include <QMqttClient>
+#include <QDateTime>
 #include <QList>
 #include <QSet>
 
 struct DeviceStatusEntry {
     QString deviceId;
     bool online;
+    QDateTime timestamp;
 };
 
 struct LogEntry {
