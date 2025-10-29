@@ -7,26 +7,22 @@ namespace Ui {
     class Connection;
 }
 
-struct ConnectionSettings {
-    QString Address;
-    uint16_t port;
-    QString username, password;
-};
-
 class Connection : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit Connection(QWidget* parent = nullptr, ConnectionSettings* settings = nullptr);
+    explicit Connection(QWidget* parent = nullptr);
     ~Connection();
 
 private slots:
     void accept() override;
 
+signals:
+    void connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password);
+
 private:
     Ui::Connection* ui;
-    ConnectionSettings* _settings;
 };
 
 #endif // CONNECTION_H

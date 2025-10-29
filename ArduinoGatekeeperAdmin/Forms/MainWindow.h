@@ -6,6 +6,7 @@
 #include <QLineSeries>
 #include <QValueAxis>
 #include <QDateTimeAxis>
+#include "Connection.h"
 #include "LogExplorer.h"
 #include "ClientExplorer.h"
 #include "../Models/GatekeeperModel.h"
@@ -38,7 +39,7 @@ public:
     ~MainWindow();
 
 private slots:
-    void handleConnectionStatusChange(bool isConnected);
+    void handleConnectionStatusChange(QMqttClient::ClientState state, QMqttClient::ClientError error);
     void handleModelMetricsChange(uint32_t connectedDevicesCount, uint32_t granted, uint32_t denied);
     void handleNewLogEntry(const LogEntry& entry);
     void handleActivityChartTimerTimeout();
@@ -46,6 +47,7 @@ private slots:
 private:
     Ui::MainWindow* ui;
     GatekeeperModel* _gatekeeperModel = nullptr;
+    Connection* _connectionManager = nullptr;
     LogExplorer* _logExplorer = nullptr;
     ClientExplorer* _clientExplorer = nullptr;
     GrantedDeniedRatioChart _grantedDeniedRationChart;

@@ -5,7 +5,7 @@
 #include <QChartView>
 #include <QTimer>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), _gatekeeperModel(new GatekeeperModel(this)), _logExplorer(new LogExplorer(this)), _clientExplorer(new ClientExplorer(this))
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), _gatekeeperModel(new GatekeeperModel(this)), _connectionManager(new Connection(this)), _logExplorer(new LogExplorer(this)), _clientExplorer(new ClientExplorer(this))
 {
     ui->setupUi(this);
     ui->metricsLayout->setColumnStretch(0, 2);
@@ -17,26 +17,50 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     activityByTimeIntervalTimer->setInterval(ACTIVITY_CHART_TIME_INTERVAL);
     activityByTimeIntervalTimer->start();
 
-    connect(_gatekeeperModel, &GatekeeperModel::connectionStatusChanged, this, &MainWindow::handleConnectionStatusChange);
+    connect(_gatekeeperModel, &GatekeeperModel::clientStateChanged, this, &MainWindow::handleConnectionStatusChange);
     connect(_gatekeeperModel, &GatekeeperModel::metricsUpdated, this, &MainWindow::handleModelMetricsChange);
     connect(_gatekeeperModel, &GatekeeperModel::newLogEntry, this, &MainWindow::handleNewLogEntry);
     connect(_gatekeeperModel, &GatekeeperModel::newLogEntry, _logExplorer, &LogExplorer::addLogEntry);
     connect(_gatekeeperModel, &GatekeeperModel::newDeviceStatusEntry, _clientExplorer, &ClientExplorer::addClientEntry);
+    connect(_connectionManager, &Connection::connectToBroker, _gatekeeperModel, &GatekeeperModel::connectToBroker);
+    connect(ui->pbManageBrokerConnection, &QAbstractButton::clicked, _connectionManager, &QWidget::show);
     connect(ui->pbLogExplorer, &QAbstractButton::clicked, _logExplorer, &QWidget::show);
     connect(ui->pbClientsExplorer, &QAbstractButton::clicked, _clientExplorer, &QWidget::show);
 
-    _gatekeeperModel->connectToBroker("192.168.1.5", 1883);
+    if (_connectionManager->exec() == QDialog::DialogCode::Rejected) exit(0);
 }
 
 MainWindow::~MainWindow() { delete ui; }
 
-void MainWindow::handleConnectionStatusChange(bool isConnected) {
-    if (isConnected)
-        ui->statusbar->showMessage(
-            QString("Connected to MQTT broker at %1:%2").arg(_gatekeeperModel->getBrokerAddress()).arg(_gatekeeperModel->getBrokerPort())
-        );
-    else
-        ui->statusbar->showMessage("Connection to broker lost!");
+void MainWindow::handleConnectionStatusChange(QMqttClient::ClientState state, QMqttClient::ClientError error) {
+    switch (state) {
+        case QMqttClient::ClientState::Connected: {
+            ui->centralwidget->setEnabled(true);
+            ui->statusbar->showMessage(
+                QString("Connected to MQTT broker at %1:%2").arg(_gatekeeperModel->getBrokerAddress()).arg(_gatekeeperModel->getBrokerPort())
+            );
+        }; break;
+        case QMqttClient::ClientState::Connecting: {
+            ui->centralwidget->setEnabled(false);
+            ui->statusbar->showMessage("Connecting to broker...");
+        }; break;
+        case QMqttClient::ClientState::Disconnected: {
+            ui->centralwidget->setEnabled(false);
+            QString message = "Connection error: ";
+            switch (error) {
+                case QMqttClient::ClientError::InvalidProtocolVersion: message += "Invalid protocol version"; break;
+                case QMqttClient::ClientError::IdRejected: message += "ID rejected"; break;
+                case QMqttClient::ClientError::ServerUnavailable: message += "Service unavailable"; break;
+                case QMqttClient::ClientError::BadUsernameOrPassword: message += "Incorrect credentials"; break;
+                case QMqttClient::ClientError::NotAuthorized: message += "Not authorized"; break;
+                case QMqttClient::ClientError::TransportInvalid: message += "Transport invalid"; break;
+                case QMqttClient::ClientError::ProtocolViolation: message += "Protocol violation"; break;
+                default: message += "Unknown";
+            }
+            ui->statusbar->showMessage(message);
+            _connectionManager->open();
+        }; break;
+    }
 }
 
 void MainWindow::handleModelMetricsChange(uint32_t connectedDevicesCount, uint32_t granted, uint32_t denied)

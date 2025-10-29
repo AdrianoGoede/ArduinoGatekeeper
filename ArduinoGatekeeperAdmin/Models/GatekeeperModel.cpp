@@ -8,22 +8,28 @@ GatekeeperModel::GatekeeperModel(QObject* parent) : QObject(parent), _mqttClient
     connect(_mqttClient, &QMqttClient::connected, this, &GatekeeperModel::mqttConnected);
     connect(_mqttClient, &QMqttClient::disconnected, this, &GatekeeperModel::mqttDisconnected);
     connect(_mqttClient, &QMqttClient::messageReceived, this, &GatekeeperModel::mqttMessageReceived);
+    connect(_mqttClient, &QMqttClient::stateChanged, this, &GatekeeperModel::mqttClientStateChanged);
 }
 
-void GatekeeperModel::connectToBroker(const QString& address, uint16_t port) {
+void GatekeeperModel::connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password) {
+    if (_mqttClient->state() != QMqttClient::ClientState::Disconnected)
+        _mqttClient->disconnectFromHost();
+
     _mqttClient->setHostname(address);
     _mqttClient->setPort(port);
+    _mqttClient->setUsername(userName);
+    _mqttClient->setPassword(password);
     _mqttClient->setClientId(MQTT_CLIENT_ID);
     _mqttClient->connectToHost();
 }
 
 void GatekeeperModel::mqttConnected() {
-    emit connectionStatusChanged(true);
     _mqttClient->subscribe(QMqttTopicFilter(MQTT_TOPIC_DEVICE_STATUS), MQTT_CLIENT_QOS);
     _mqttClient->subscribe(QMqttTopicFilter(MQTT_TOPIC_ACTIVITY_LOG), MQTT_CLIENT_QOS);
+    emit clientStateChanged(QMqttClient::ClientState::Connected, _mqttClient->error());
 }
 
-void GatekeeperModel::mqttDisconnected() { emit connectionStatusChanged(false); }
+void GatekeeperModel::mqttDisconnected() { emit clientStateChanged(QMqttClient::ClientState::Disconnected, _mqttClient->error()); }
 
 void GatekeeperModel::mqttMessageReceived(const QByteArray& message, const QMqttTopicName& topic) {
     QStringList topicParts = topic.name().split('/');
@@ -34,6 +40,8 @@ void GatekeeperModel::mqttMessageReceived(const QByteArray& message, const QMqtt
     else if (topic.name().endsWith("Status"))
         processDeviceStatusMessage(topicParts.at(1), message);
 }
+
+void GatekeeperModel::mqttClientStateChanged(QMqttClient::ClientState state) { emit clientStateChanged(state, _mqttClient->error()); }
 
 void GatekeeperModel::processLogMessage(const QString& deviceId, const QByteArray& payload) {
     QJsonParseError parseError;

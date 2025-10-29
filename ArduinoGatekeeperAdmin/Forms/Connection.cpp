@@ -1,7 +1,8 @@
 #include "Connection.h"
 #include "Forms/ui_Connection.h"
+#include <QMessageBox>
 
-Connection::Connection(QWidget *parent, ConnectionSettings* settings) : QDialog(parent), _settings(settings), ui(new Ui::Connection)
+Connection::Connection(QWidget *parent) : QDialog(parent), ui(new Ui::Connection)
 {
     ui->setupUi(this);
     connect(ui->connectionFormButtonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
@@ -12,8 +13,11 @@ Connection::~Connection() { delete ui; }
 
 void Connection::accept()
 {
-    _settings->Address = ui->leAddress->text();
-    _settings->port = (uint16_t)ui->sbPort->value();
-    _settings->username = ui->leUsername->text();
-    _settings->password = ui->lePassword->text();
+    emit connectToBroker(
+        ui->leAddress->text(),
+        (qint16)ui->sbPort->value(),
+        ui->leUsername->text(),
+        ui->lePassword->text()
+    );
+    QDialog::accept();
 }

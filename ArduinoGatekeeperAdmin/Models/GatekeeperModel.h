@@ -34,15 +34,15 @@ private slots:
     void mqttConnected();
     void mqttDisconnected();
     void mqttMessageReceived(const QByteArray& message, const QMqttTopicName& topic);
+    void mqttClientStateChanged(QMqttClient::ClientState state);
 
 public slots:
-    void connectToBroker(const QString& address, uint16_t port);
+    void connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password);
 
 signals:
-    void connectionStatusChanged(bool isConnected);
+    void clientStateChanged(QMqttClient::ClientState state, QMqttClient::ClientError error = QMqttClient::ClientError::NoError);
     void newDeviceStatusEntry(const DeviceStatusEntry& entry);
     void newLogEntry(const LogEntry& entry);
-    void userListUpdated();
     void metricsUpdated(uint32_t connectedDevicesCount, uint32_t granted, uint32_t denied);
 
 public:
