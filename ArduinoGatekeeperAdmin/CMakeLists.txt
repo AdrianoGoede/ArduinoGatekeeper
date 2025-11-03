@@ -26,6 +26,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
     qt_add_executable(ArduinoGatekeeperAdmin
         MANUAL_FINALIZATION
@@ -50,6 +51,11 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         Models/ClientTableModel.cpp
         Models/ClientFilterProxyModel.h
         Models/ClientFilterProxyModel.cpp
+        Forms/UserManager.h
+        Forms/UserManager.cpp
+        Forms/UserManager.ui
+        Models/UserListModel.h
+        Models/UserListModel.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ArduinoGatekeeperAdmin APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -72,6 +78,7 @@ endif()
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt${QT_VERSION_MAJOR}::Mqtt)
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt${QT_VERSION_MAJOR}::Charts)
+target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt6::Core)
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt6::Core)
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt6::Core)
 target_link_libraries(ArduinoGatekeeperAdmin PRIVATE Qt6::Core)

@@ -7,6 +7,7 @@
 #include <QValueAxis>
 #include <QDateTimeAxis>
 #include "Connection.h"
+#include "UserManager.h"
 #include "LogExplorer.h"
 #include "ClientExplorer.h"
 #include "../Models/GatekeeperModel.h"
@@ -48,6 +49,7 @@ private:
     Ui::MainWindow* ui;
     GatekeeperModel* _gatekeeperModel = nullptr;
     Connection* _connectionManager = nullptr;
+    UserManager* _userManager = nullptr;
     LogExplorer* _logExplorer = nullptr;
     ClientExplorer* _clientExplorer = nullptr;
     GrantedDeniedRatioChart _grantedDeniedRationChart;

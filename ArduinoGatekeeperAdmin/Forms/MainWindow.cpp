@@ -5,7 +5,7 @@
 #include <QChartView>
 #include <QTimer>
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), _gatekeeperModel(new GatekeeperModel(this)), _connectionManager(new Connection(this)), _logExplorer(new LogExplorer(this)), _clientExplorer(new ClientExplorer(this))
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), _gatekeeperModel(new GatekeeperModel(this)), _connectionManager(new Connection(this)), _userManager(new UserManager(this)), _logExplorer(new LogExplorer(this)), _clientExplorer(new ClientExplorer(this))
 {
     ui->setupUi(this);
     ui->metricsLayout->setColumnStretch(0, 2);
@@ -22,8 +22,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(_gatekeeperModel, &GatekeeperModel::newLogEntry, this, &MainWindow::handleNewLogEntry);
     connect(_gatekeeperModel, &GatekeeperModel::newLogEntry, _logExplorer, &LogExplorer::addLogEntry);
     connect(_gatekeeperModel, &GatekeeperModel::newDeviceStatusEntry, _clientExplorer, &ClientExplorer::addClientEntry);
+    connect(_gatekeeperModel, &GatekeeperModel::newUserList, _userManager, &UserManager::addUserEntries);
     connect(_connectionManager, &Connection::connectToBroker, _gatekeeperModel, &GatekeeperModel::connectToBroker);
+    connect(_userManager, &UserManager::newUserList, _gatekeeperModel, &GatekeeperModel::updateUserList);
     connect(ui->pbManageBrokerConnection, &QAbstractButton::clicked, _connectionManager, &QWidget::show);
+    connect(ui->pbManageUsers, &QAbstractButton::clicked, _userManager, &QWidget::show);
     connect(ui->pbLogExplorer, &QAbstractButton::clicked, _logExplorer, &QWidget::show);
     connect(ui->pbClientsExplorer, &QAbstractButton::clicked, _clientExplorer, &QWidget::show);
 
