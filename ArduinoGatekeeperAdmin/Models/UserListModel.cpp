@@ -19,4 +19,20 @@ void UserListModel::addEntries(const QList<UserEntry>& entries)
     endResetModel();
 }
 
-QList<UserEntry> UserListModel::getCurrentList() const { return _userEntries.values(); }
+void UserListModel::addEntry(const UserEntry &entry)
+{
+    beginResetModel();
+    _userEntries.insert(entry.uid, entry);
+    endResetModel();
+}
+
+void UserListModel::removeEntry(const QString& uid)
+{
+    beginResetModel();
+    _userEntries.remove(uid);
+    endResetModel();
+}
+
+UserEntry UserListModel::getEntry(const QString& uid) const { return _userEntries.value(uid, UserEntry()); }
+
+QList<UserEntry> UserListModel::getEntries() const { return _userEntries.values(); }

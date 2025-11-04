@@ -5,6 +5,7 @@
 #include <QList>
 #include "../Models/GatekeeperModel.h"
 #include "../Models/UserListModel.h"
+#include "../Forms/UserEditor.h"
 
 namespace Ui {
     class UserManager;
@@ -24,6 +25,8 @@ public slots:
 
 private slots:
     void handleListViewClick(const QModelIndex& index);
+    void handleUserEdit();
+    void handleUserDelete();
 
 signals:
     void newUserList(const QList<UserEntry>& entries);
@@ -31,6 +34,7 @@ signals:
 private:
     Ui::UserManager *ui;
     UserListModel* _userListModel = nullptr;
+    UserEditor* _userEditor = nullptr;
 };
 
 #endif // USERMANAGER_H

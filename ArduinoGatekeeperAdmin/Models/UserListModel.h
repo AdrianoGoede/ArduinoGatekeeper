@@ -16,7 +16,10 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     void addEntries(const QList<UserEntry>& entry);
-    QList<UserEntry> getCurrentList() const;
+    void addEntry(const UserEntry& entry);
+    void removeEntry(const QString& uid);
+    UserEntry getEntry(const QString& uid) const;
+    QList<UserEntry> getEntries() const;
 
 private:
     QMap<QString, UserEntry> _userEntries;

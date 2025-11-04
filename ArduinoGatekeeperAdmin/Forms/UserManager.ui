@@ -28,6 +28,25 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <layout class="QGridLayout" name="upperLayout">
+     <item row="2" column="0">
+      <widget class="QPushButton" name="pbDeleteUser">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Delete User</string>
+       </property>
+       <property name="icon">
+        <iconset theme="QIcon::ThemeIcon::ListRemove"/>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="0">
       <widget class="QPushButton" name="pbAddUser">
        <property name="font">
@@ -54,44 +73,6 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QPushButton" name="pbDeleteUser">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Delete User</string>
-       </property>
-       <property name="icon">
-        <iconset theme="QIcon::ThemeIcon::ListRemove"/>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QPushButton" name="pbManageUser">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>10</pointsize>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Manage User</string>
-       </property>
-       <property name="icon">
-        <iconset theme="QIcon::ThemeIcon::UserAvailable"/>
-       </property>
-      </widget>
-     </item>
      <item row="3" column="0">
       <spacer name="buttonsVerticalSpacer">
        <property name="orientation">
@@ -104,6 +85,25 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item row="1" column="0">
+      <widget class="QPushButton" name="pbEditUser">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>10</pointsize>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Edit User</string>
+       </property>
+       <property name="icon">
+        <iconset theme="QIcon::ThemeIcon::UserAvailable"/>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

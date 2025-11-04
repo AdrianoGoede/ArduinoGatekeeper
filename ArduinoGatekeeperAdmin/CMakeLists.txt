@@ -56,6 +56,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
         Forms/UserManager.ui
         Models/UserListModel.h
         Models/UserListModel.cpp
+        Forms/UserEditor.h
+        Forms/UserEditor.cpp
+        Forms/UserEditor.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ArduinoGatekeeperAdmin APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
