@@ -39,7 +39,7 @@ void GatekeeperModel::updateUserList(const QList<UserEntry>& entries)
     doc.setArray(users);
 
     _mqttClient->publish(
-        QString(MQTT_TOPIC_USER_LIST).replace('+', MQTT_CLIENT_ID),
+        QString(MQTT_TOPIC_USER_LIST),
         doc.toJson(QJsonDocument::JsonFormat::Compact),
         MQTT_CLIENT_QOS,
         true

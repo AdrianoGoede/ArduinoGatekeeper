@@ -21,7 +21,7 @@ struct LogEntry {
 
 struct UserEntry {
     QString uid;
-    uint8_t key[USER_RFID_KEY_LENGHT];
+    uint8_t key[USER_RFID_KEY_LENGHT] = { 0 };
 };
 
 class GatekeeperModel : public QObject

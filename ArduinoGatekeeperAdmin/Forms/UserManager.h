@@ -25,6 +25,7 @@ public slots:
 
 private slots:
     void handleListViewClick(const QModelIndex& index);
+    void handleUserAdd();
     void handleUserEdit();
     void handleUserDelete();
 

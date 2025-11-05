@@ -9,6 +9,7 @@ UserManager::UserManager(QWidget *parent) : QDialog(parent), ui(new Ui::UserMana
     connect(ui->pbSave, &QAbstractButton::clicked, this, &QDialog::accept);
     connect(ui->pbClose, &QAbstractButton::clicked, this, &QDialog::reject);
     connect(ui->lvUsers, &QAbstractItemView::clicked, this, &UserManager::handleListViewClick);
+    connect(ui->pbAddUser, &QAbstractButton::clicked, this, &UserManager::handleUserAdd);
     connect(ui->pbEditUser, &QAbstractButton::clicked, this, &UserManager::handleUserEdit);
     connect(ui->pbDeleteUser, &QAbstractButton::clicked, this, &UserManager::handleUserDelete);
 }
@@ -29,13 +30,26 @@ void UserManager::handleListViewClick(const QModelIndex& index)
     ui->pbDeleteUser->setEnabled(index.isValid());
 }
 
+void UserManager::handleUserAdd()
+{
+    UserEntry entry;
+    if (_userEditor->exec(&entry) == QDialog::DialogCode::Accepted) {
+        _userListModel->addEntry(entry);
+        ui->pbEditUser->setEnabled(false);
+        ui->pbDeleteUser->setEnabled(false);
+    }
+}
+
 void UserManager::handleUserEdit()
 {
     QModelIndex index = ui->lvUsers->currentIndex();
     if (!index.isValid()) return;
     UserEntry entry = _userListModel->getEntry(index.data(Qt::DisplayRole).toString());
-    if (_userEditor->exec(&entry) == QDialog::DialogCode::Accepted)
+    if (_userEditor->exec(&entry) == QDialog::DialogCode::Accepted) {
         _userListModel->addEntry(entry);
+        ui->pbEditUser->setEnabled(false);
+        ui->pbDeleteUser->setEnabled(false);
+    }
 }
 
 void UserManager::handleUserDelete()
@@ -53,4 +67,6 @@ void UserManager::handleUserDelete()
     if (!index.isValid()) return;
     QString uid = index.data(Qt::DisplayRole).toString();
     _userListModel->removeEntry(uid);
+    ui->pbEditUser->setEnabled(false);
+    ui->pbDeleteUser->setEnabled(false);
 }
