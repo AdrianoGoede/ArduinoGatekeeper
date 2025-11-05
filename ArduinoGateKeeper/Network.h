@@ -9,25 +9,19 @@
 #include <queue>
 #include "config.h"
 
-enum MqttMessageType {
-  AuthorizedUserAdd = 0,
-  AuthorizedUserRemove = 1
-};
-
 struct MqttMessage {
-  MqttMessageType type;
-  String payload;
+  String topic, payload;
 };
 
 class Network {
 private:
-  static char strBuffer[STRING_BUFFER_SIZE];
-  static SemaphoreHandle_t semaphoreHandle;
-  static std::queue<MqttMessage> messages;
-  static WiFiUDP udpWifiClient;
-  static NTPClient ntpClient;
-  static WiFiClient wifiClient;
-  static MqttClient mqttClient;
+  static char _strBuffer[STRING_BUFFER_SIZE];
+  static SemaphoreHandle_t _semaphoreHandle;
+  static std::queue<MqttMessage> _messages;
+  static WiFiUDP _udpWifiClient;
+  static NTPClient _ntpClient;
+  static WiFiClient _wifiClient;
+  static MqttClient _mqttClient;
   static bool connectWiFi();
   static bool synchronizeClock();
   static bool connectMqttBroker();

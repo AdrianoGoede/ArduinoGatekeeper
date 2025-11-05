@@ -27,5 +27,4 @@
 #define ACTIVITY_LOG_BUFFER_SIZE        25
 #define ACTIVITY_LOG_TOPIC              "ArduinoGatekeeper/%s/Log"
 #define DEVICE_STATUS_TOPIC             "ArduinoGatekeeper/%s/Status"
-#define AUTHORIZED_USERS_ADD_TOPIC      "ArduinoGatekeeper/AuthUsers/Add"
-#define AUTHORIZED_USERS_REMOVE_TOPIC   "ArduinoGatekeeper/AuthUsers/Remove"
+#define AUTHORIZED_USERS_TOPIC          "ArduinoGatekeeper/Admin/UserList"

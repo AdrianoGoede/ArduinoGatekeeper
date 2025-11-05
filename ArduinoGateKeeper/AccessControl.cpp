@@ -4,27 +4,27 @@
 #include "AccessControl.h"
 #include "config.h"
 
-MFRC522 AccessControl::rfidReader(RFID_CS_PIN, RFID_RST_PIN);
-SemaphoreHandle_t AccessControl::semaphoreHandle;
-std::map<String, MFRC522::MIFARE_Key> AccessControl::authorizedUsers;
-CircularBuffer<String> AccessControl::logBuffer{ACTIVITY_LOG_BUFFER_SIZE};
+MFRC522 AccessControl::_rfidReader(RFID_CS_PIN, RFID_RST_PIN);
+SemaphoreHandle_t AccessControl::_semaphoreHandle;
+std::map<String, MFRC522::MIFARE_Key> AccessControl::_authorizedUsers;
+CircularBuffer<String> AccessControl::_logBuffer{ACTIVITY_LOG_BUFFER_SIZE};
 
 bool AccessControl::begin(SemaphoreHandle_t semaphore) {
-  semaphoreHandle = semaphore;
+  _semaphoreHandle = semaphore;
   SPI.begin();
-  rfidReader.PCD_Init();
+  _rfidReader.PCD_Init();
   return true;
 }
 
 AccessControlStatus AccessControl::handleAccessControl(time_t timestamp) {
-  if (!rfidReader.PICC_IsNewCardPresent() || !rfidReader.PICC_ReadCardSerial())
+  if (!_rfidReader.PICC_IsNewCardPresent() || !_rfidReader.PICC_ReadCardSerial())
     return AccessControlStatus::Waiting;
 
-  String uid = getUidAsString(rfidReader.uid.uidByte, rfidReader.uid.size);
+  String uid = getUidAsString(_rfidReader.uid.uidByte, _rfidReader.uid.size);
 
   AccessControlStatus status = (authenticateCard(uid) ? AccessControlStatus::Granted : AccessControlStatus::Denied);
-  rfidReader.PICC_HaltA();
-  rfidReader.PCD_StopCrypto1();
+  _rfidReader.PICC_HaltA();
+  _rfidReader.PCD_StopCrypto1();
 
   generateLogEntry(uid, status, timestamp);
 
@@ -32,11 +32,11 @@ AccessControlStatus AccessControl::handleAccessControl(time_t timestamp) {
 }
 
 bool AccessControl::authenticateCard(const String& uid) {
-  auto userKey = authorizedUsers.find(uid);
-  if (userKey == authorizedUsers.end()) return false;
+  auto userKey = _authorizedUsers.find(uid);
+  if (userKey == _authorizedUsers.end()) return false;
 
   byte sector = 0, blockAddr = 0;
-  return (rfidReader.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 0, &userKey->second, &(rfidReader.uid)) == MFRC522::STATUS_OK);
+  return (_rfidReader.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, 0, &userKey->second, &(_rfidReader.uid)) == MFRC522::STATUS_OK);
 }
 
 String AccessControl::getUidAsString(const byte* uid, size_t length) {
@@ -59,44 +59,41 @@ bool AccessControl::generateLogEntry(const String& uid, AccessControlStatus stat
 
   serializeJson(document, entry);
 
-  if (xSemaphoreTake(semaphoreHandle, pdMS_TO_TICKS(ACC_CONTROL_OPERATION_INTERVAL)) == pdTRUE) {
-    logBuffer.push(entry);
-    xSemaphoreGive(semaphoreHandle);
+  if (xSemaphoreTake(_semaphoreHandle, pdMS_TO_TICKS(ACC_CONTROL_OPERATION_INTERVAL)) == pdTRUE) {
+    _logBuffer.push(entry);
+    xSemaphoreGive(_semaphoreHandle);
   }
 }
 
-void AccessControl::addAuthorizedUser(const String& jsonPayload) {
-  JsonDocument document;
-  if (deserializeJson(document, jsonPayload) != DeserializationError::Ok) return;
-
-  JsonString uid = document["UID"];
-  if (uid.isNull() || uid.size() == 0) return;
-  JsonArray keyArray = document["key"];
-  if (keyArray.isNull() || keyArray.size() != MFRC522::MIFARE_Misc::MF_KEY_SIZE) return;
-
-  MFRC522::MIFARE_Key key;
-  for (uint8_t i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
-    key.keyByte[i] = keyArray[i];
-
-  if (xSemaphoreTake(semaphoreHandle, pdMS_TO_TICKS(ACC_CONTROL_OPERATION_INTERVAL)) == pdTRUE) {
-    authorizedUsers[uid.c_str()] = key;
-    xSemaphoreGive(semaphoreHandle);
-  }
-}
-
-void AccessControl::removeAuthorizedUser(const String& jsonPayload) {
+void AccessControl::handleUserListMessage(const String& jsonPayload) {
   JsonDocument document;
   deserializeJson(document, jsonPayload);
+  if (!document.is<JsonArray>()) return;
 
-  JsonString uid = document["UID"];
-  if (uid.isNull() || uid.size() == 0) return;
+  if (xSemaphoreTake(_semaphoreHandle, pdMS_TO_TICKS(ACC_CONTROL_OPERATION_INTERVAL)) == pdTRUE) {
+    _authorizedUsers.clear();
+    for (const JsonVariant& user : document.as<JsonArray>()) {
+      JsonString uid = user["UID"];
+      if (uid.isNull() || uid.size() == 0) continue;
+      JsonArray keyArray = user["key"];
+      if (keyArray.isNull() || keyArray.size() != MFRC522::MIFARE_Misc::MF_KEY_SIZE) continue;
 
-  if (xSemaphoreTake(semaphoreHandle, pdMS_TO_TICKS(ACC_CONTROL_OPERATION_INTERVAL)) == pdTRUE) {
-    authorizedUsers.erase(uid.c_str());
-    xSemaphoreGive(semaphoreHandle);
+      Serial.print(uid.c_str());
+      Serial.print(" ");
+      for (int i = 0; i < 6; i++)
+        Serial.print((int)keyArray[i]);
+      Serial.println();
+
+      MFRC522::MIFARE_Key key;
+      for (uint8_t i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
+        key.keyByte[i] = keyArray[i];
+
+      _authorizedUsers[uid.c_str()] = key;
+    }
+    xSemaphoreGive(_semaphoreHandle);
   }
 }
 
-bool AccessControl::hasAvailableLogEntries() { return !logBuffer.isEmpty(); }
+bool AccessControl::hasAvailableLogEntries() { return !_logBuffer.isEmpty(); }
 
-String AccessControl::getNextLogEntry() { return logBuffer.pop(); }
+String AccessControl::getNextLogEntry() { return _logBuffer.pop(); }

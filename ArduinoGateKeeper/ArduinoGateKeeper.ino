@@ -12,10 +12,8 @@ void networkingTask(void* pvParameters) {
     if (Network::handleConnections()) {
       while (Network::hasAvailableMessages()) {
         MqttMessage message = Network::getNextMessage();
-        switch (message.type) {
-          case AuthorizedUserAdd: AccessControl::addAuthorizedUser(message.payload); break;
-          case AuthorizedUserRemove: AccessControl::removeAuthorizedUser(message.payload); break;
-        }
+        if (message.topic == AUTHORIZED_USERS_TOPIC)
+          AccessControl::handleUserListMessage(message.payload);
       }
       
       while (AccessControl::hasAvailableLogEntries())
