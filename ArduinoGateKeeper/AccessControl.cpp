@@ -78,12 +78,6 @@ void AccessControl::handleUserListMessage(const String& jsonPayload) {
       JsonArray keyArray = user["key"];
       if (keyArray.isNull() || keyArray.size() != MFRC522::MIFARE_Misc::MF_KEY_SIZE) continue;
 
-      Serial.print(uid.c_str());
-      Serial.print(" ");
-      for (int i = 0; i < 6; i++)
-        Serial.print((int)keyArray[i]);
-      Serial.println();
-
       MFRC522::MIFARE_Key key;
       for (uint8_t i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
         key.keyByte[i] = keyArray[i];
