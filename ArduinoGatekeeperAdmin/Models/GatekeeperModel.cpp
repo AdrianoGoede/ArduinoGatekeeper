@@ -87,7 +87,6 @@ void GatekeeperModel::processLogMessage(const QString& deviceId, const QByteArra
     else
         _deniedCount++;
 
-    _logEntries += entry;
     emit newLogEntry(entry);
     emit metricsUpdated(_connectedDeviceIds.size(), _grantedCount, _deniedCount);
 }

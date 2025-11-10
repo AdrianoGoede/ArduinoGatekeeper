@@ -39,7 +39,7 @@
         </font>
        </property>
        <property name="text">
-        <string>Granted</string>
+        <string>Status</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignmentFlag::AlignCenter</set>

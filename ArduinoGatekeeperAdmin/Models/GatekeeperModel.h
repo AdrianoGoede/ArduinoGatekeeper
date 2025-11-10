@@ -54,7 +54,6 @@ private:
     QMqttClient* _mqttClient = nullptr;
     uint32_t _grantedCount = 0, _deniedCount = 0;
     QSet<QString> _connectedDeviceIds;
-    QList<LogEntry> _logEntries;
     bool _receivedRetainedMessages = false;
     void processLogMessage(const QString& deviceId, const QByteArray& payload);
     void processDeviceStatusMessage(const QString& deviceId, const QByteArray& payload);
