@@ -16,8 +16,11 @@
 #define NTP_SERVER_URL                  "europe.pool.ntp.org"
 #define MQTT_BROKER_ADDRESS             ""
 #define MQTT_BROKER_PORT                1883
-#define MQTT_QOS_LEVEL                  1
 #define MQTT_DEVICE_ID                  "Agk_1"
+#define MQTT_USERNAME                   MQTT_DEVICE_ID
+#define MQTT_PASSWORD                   ""
+#define MQTT_QOS_LEVEL                  1
+#define MQTT_KEEP_ALIVE_INTERVAL        2000
 
 #define TIME_OFFSET                     0
 #define TIME_RESYNC_INTERVAL            3600000

@@ -75,6 +75,9 @@ bool Network::connectMqttBroker() {
   Serial.print(_strBuffer);
 
   _mqttClient.setId(MQTT_DEVICE_ID);
+  _mqttClient.setUsernamePassword(MQTT_USERNAME, MQTT_PASSWORD);
+  _mqttClient.setKeepAliveInterval(MQTT_KEEP_ALIVE_INTERVAL);
+
   snprintf(_strBuffer, STRING_BUFFER_SIZE, DEVICE_STATUS_TOPIC, MQTT_DEVICE_ID);
   publishLastWill(_strBuffer, "offline", true);
 
