@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     activityByTimeIntervalTimer->start();
 
     connect(_gatekeeperModel, &GatekeeperModel::clientStateChanged, this, &MainWindow::handleConnectionStatusChange);
+    connect(_gatekeeperModel, &GatekeeperModel::connectionSetupError, this, &MainWindow::handleConnectionSetupError);
     connect(_gatekeeperModel, &GatekeeperModel::metricsUpdated, this, &MainWindow::handleModelMetricsChange);
     connect(_gatekeeperModel, &GatekeeperModel::newLogEntry, this, &MainWindow::handleNewLogEntry);
     connect(_gatekeeperModel, &GatekeeperModel::newLogEntry, _logExplorer, &LogExplorer::addLogEntry);
@@ -92,6 +93,17 @@ void MainWindow::handleActivityChartTimerTimeout()
     _timeIntervalActivityChart.DeniedSeries->append(msSinceEpoch, _timeIntervalActivityChart.deniedCount);
     _timeIntervalActivityChart.grantedCount = _timeIntervalActivityChart.deniedCount = 0;
     adjustTimeIntervalActivityChart(timestamp);
+}
+
+void MainWindow::handleConnectionSetupError(const QString& message)
+{
+    QMessageBox::critical(
+        this,
+        "Connection setup error",
+        message,
+        QMessageBox::StandardButton::Ok
+    );
+    handleConnectionStatusChange(QMqttClient::ClientState::Disconnected, QMqttClient::ClientError::TransportInvalid);
 }
 
 void MainWindow::setAccessStatusChart()

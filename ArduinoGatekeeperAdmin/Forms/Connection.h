@@ -17,9 +17,12 @@ public:
 
 private slots:
     void accept() override;
+    void selectCaCertificateFile();
+    void selectLocalCertificateFile();
+    void selectLocalKeyFile();
 
 signals:
-    void connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password);
+    void connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath);
 
 private:
     Ui::Connection* ui;

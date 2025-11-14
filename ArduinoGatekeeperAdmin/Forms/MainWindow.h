@@ -44,6 +44,7 @@ private slots:
     void handleModelMetricsChange(uint32_t connectedDevicesCount, uint32_t granted, uint32_t denied);
     void handleNewLogEntry(const LogEntry& entry);
     void handleActivityChartTimerTimeout();
+    void handleConnectionSetupError(const QString& message);
 
 private:
     Ui::MainWindow* ui;

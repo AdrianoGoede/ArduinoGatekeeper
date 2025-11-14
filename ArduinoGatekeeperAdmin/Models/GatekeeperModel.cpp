@@ -3,6 +3,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonValue>
+#include <QException>
+#include <QFile>
+#include <QSslKey>
 
 GatekeeperModel::GatekeeperModel(QObject* parent) : QObject(parent), _mqttClient(new QMqttClient(this)) {
     connect(_mqttClient, &QMqttClient::connected, this, &GatekeeperModel::mqttConnected);
@@ -11,16 +14,53 @@ GatekeeperModel::GatekeeperModel(QObject* parent) : QObject(parent), _mqttClient
     connect(_mqttClient, &QMqttClient::stateChanged, this, &GatekeeperModel::mqttClientStateChanged);
 }
 
-void GatekeeperModel::connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password) {
-    if (_mqttClient->state() != QMqttClient::ClientState::Disconnected)
-        _mqttClient->disconnectFromHost();
+void GatekeeperModel::connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath) {
+    QFile caFile(caCertPath);
+    QFile clientCertFile(clientCertPath);
+    QFile clientKeyFile(clientKeyPath);
 
-    _mqttClient->setHostname(address);
-    _mqttClient->setPort(port);
-    _mqttClient->setUsername(userName);
-    _mqttClient->setPassword(password);
-    _mqttClient->setClientId(MQTT_CLIENT_ID);
-    _mqttClient->connectToHost();
+    try {
+        if (_mqttClient->state() != QMqttClient::ClientState::Disconnected)
+            _mqttClient->disconnectFromHost();
+
+        if (!caFile.open(QIODevice::ReadOnly))
+            throw std::runtime_error("Could not open TLS CA certificate file");
+        if (!clientCertFile.open(QIODevice::ReadOnly))
+            throw std::runtime_error("Could not open TLS client certificate file");
+        if (!clientKeyFile.open(QIODevice::ReadOnly))
+            throw std::runtime_error("Could not open TLS client key file");
+
+        QSslCertificate caCert(&caFile, QSsl::Pem);
+        if (caCert.isNull()) throw std::runtime_error("TLS CA certificate file corrupted or invalid");
+        QSslCertificate clientCert(&clientCertFile, QSsl::Pem);
+        if (clientCert.isNull()) throw std::runtime_error("TLS client certificate file corrupted or invalid");
+        QSslKey clientKey(&clientKeyFile, QSsl::Rsa, QSsl::Pem);
+        if (clientKey.isNull()) throw std::runtime_error("TLS client key file corrupted or invalid");
+
+        QSslConfiguration sslConf = QSslConfiguration::defaultConfiguration();
+        sslConf.setPeerVerifyMode(QSslSocket::PeerVerifyMode::VerifyPeer);
+        sslConf.addCaCertificate(caCert);
+        sslConf.setLocalCertificate(clientCert);
+        sslConf.setPrivateKey(clientKey);
+
+        caFile.close();
+        clientCertFile.close();
+        clientKeyFile.close();
+
+        _mqttClient->setHostname(address);
+        _mqttClient->setPort(port);
+        _mqttClient->setUsername(userName);
+        _mqttClient->setPassword(password);
+        _mqttClient->setClientId(MQTT_CLIENT_ID);
+
+        _mqttClient->connectToHostEncrypted(sslConf);
+    }
+    catch (const std::runtime_error& error) {
+        emit connectionSetupError(QString(error.what()));
+        caFile.close();
+        clientCertFile.close();
+        clientKeyFile.close();
+    }
 }
 
 void GatekeeperModel::updateUserList(const QList<UserEntry>& entries)
