@@ -30,11 +30,11 @@ void GatekeeperModel::connectToBroker(const QString& address, qint16 port, const
         if (!clientKeyFile.open(QIODevice::ReadOnly))
             throw std::runtime_error("Could not open TLS client key file");
 
-        QSslCertificate caCert(&caFile, QSsl::Pem);
+        QSslCertificate caCert(&caFile, QSsl::EncodingFormat::Pem);
         if (caCert.isNull()) throw std::runtime_error("TLS CA certificate file corrupted or invalid");
-        QSslCertificate clientCert(&clientCertFile, QSsl::Pem);
+        QSslCertificate clientCert(&clientCertFile, QSsl::EncodingFormat::Pem);
         if (clientCert.isNull()) throw std::runtime_error("TLS client certificate file corrupted or invalid");
-        QSslKey clientKey(&clientKeyFile, QSsl::Rsa, QSsl::Pem);
+        QSslKey clientKey(&clientKeyFile, QSsl::KeyAlgorithm::Ec, QSsl::EncodingFormat::Pem);
         if (clientKey.isNull()) throw std::runtime_error("TLS client key file corrupted or invalid");
 
         QSslConfiguration sslConf = QSslConfiguration::defaultConfiguration();
