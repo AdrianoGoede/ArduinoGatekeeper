@@ -1,3 +1,4 @@
+#include "WiFiSSLClient.h"
 #include <queue>
 #include "MqttClient.h"
 #include "Network.h"
@@ -7,7 +8,7 @@ SemaphoreHandle_t Network::_semaphoreHandle;
 std::queue<MqttMessage> Network::_messages;
 WiFiUDP Network::_udpWifiClient;
 NTPClient Network::_ntpClient(Network::_udpWifiClient, NTP_SERVER_URL, TIME_OFFSET, TIME_RESYNC_INTERVAL);
-WiFiClient Network::_wifiClient;
+WiFiSSLClient Network::_wifiClient;
 MqttClient Network::_mqttClient(Network::_wifiClient);
 
 bool Network::begin(SemaphoreHandle_t semaphore) {
@@ -74,6 +75,7 @@ bool Network::connectMqttBroker() {
   );
   Serial.print(_strBuffer);
 
+  _wifiClient.setCACert(BROKER_CA_CERT);
   _mqttClient.setId(MQTT_DEVICE_ID);
   _mqttClient.setUsernamePassword(MQTT_USERNAME, MQTT_PASSWORD);
   _mqttClient.setKeepAliveInterval(MQTT_KEEP_ALIVE_INTERVAL);

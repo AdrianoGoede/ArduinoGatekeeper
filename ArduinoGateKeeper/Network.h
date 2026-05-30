@@ -20,7 +20,7 @@ private:
   static std::queue<MqttMessage> _messages;
   static WiFiUDP _udpWifiClient;
   static NTPClient _ntpClient;
-  static WiFiClient _wifiClient;
+  static WiFiSSLClient _wifiClient;
   static MqttClient _mqttClient;
   static bool connectWiFi();
   static bool synchronizeClock();
