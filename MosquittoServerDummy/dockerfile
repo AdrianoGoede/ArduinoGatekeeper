@@ -1,0 +1,10 @@
+FROM eclipse-mosquitto
+WORKDIR /mosquitto
+
+COPY certs/root/ca.crt              certs/root/ca.crt
+COPY certs/server                   certs/server
+COPY config                         config
+COPY entrypoint.sh                  entrypoint.sh
+
+RUN chmod +x entrypoint.sh
+ENTRYPOINT [ "sh", "/mosquitto/entrypoint.sh" ]
