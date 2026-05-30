@@ -49,12 +49,12 @@ Enter your Wi-Fi SSID and password.
 
 Specify the MQTT broker address and port.
 
+Enter username, password and the CA certificate payload in PEM format.
+
 Adjust the pin numbers for the RFID reader and LEDs to match your hardware setup.
 
 ## To-Do
-* MQTT Encryption and Authentication: Implement support for MQTTS and password authentication to secure the connection to the broker.
-
-* Digital Signatures: Use digital signatures for all incoming and outgoing messages to ensure message integrity and authenticity.
+* ~~MQTT Encryption and Authentication: Implement support for MQTTS and password authentication to secure the connection to the broker~~.
 
 * SD Card Integration: Add support for an SD card to allow for a larger number of authorized users to be stored on the device, rather than only in RAM.
 
