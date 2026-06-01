@@ -1,5 +1,6 @@
 #include "Connection.h"
 #include "Forms/ui_Connection.h"
+#include "../Config/config.h"
 #include <QMessageBox>
 #include <QFileDialog>
 
@@ -9,8 +10,8 @@ Connection::Connection(QWidget *parent) : QDialog(parent), ui(new Ui::Connection
     connect(ui->pbCaCertPath, &QAbstractButton::clicked, this, &Connection::selectCaCertificateFile);
     connect(ui->pbClientCertPath, &QAbstractButton::clicked, this, &Connection::selectLocalCertificateFile);
     connect(ui->pbClientKeyPath, &QAbstractButton::clicked, this, &Connection::selectLocalKeyFile);
-    connect(ui->connectionFormButtonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(ui->connectionFormButtonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+    ui->sbPort->setValue(MQTT_BROKER_DEFAULT_PORT);
 }
 
 Connection::~Connection() { delete ui; }
@@ -21,10 +22,6 @@ void Connection::accept()
 
     if (ui->leAddress->text().isEmpty())
         message = "Inform the broker's address!";
-    else if (ui->leUsername->text().isEmpty())
-        message = "Inform the user name!";
-    else if (ui->lePassword->text().isEmpty())
-        message = "Inform the password!";
     else if (ui->leCaCertPath->text().isEmpty())
         message = "Inform the TLS CA certificate!";
     else if (ui->leClientCertPath->text().isEmpty())
@@ -38,8 +35,6 @@ void Connection::accept()
         emit connectToBroker(
             ui->leAddress->text(),
             (qint16)ui->sbPort->value(),
-            ui->leUsername->text(),
-            ui->lePassword->text(),
             ui->leCaCertPath->text(),
             ui->leClientCertPath->text(),
             ui->leClientKeyPath->text()

@@ -6,8 +6,8 @@ UserManager::UserManager(QWidget *parent) : QDialog(parent), ui(new Ui::UserMana
 {
     ui->setupUi(this);
     ui->lvUsers->setModel(_userListModel);
-    connect(ui->pbSave, &QAbstractButton::clicked, this, &QDialog::accept);
-    connect(ui->pbClose, &QAbstractButton::clicked, this, &QDialog::reject);
+    connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(ui->lvUsers, &QAbstractItemView::clicked, this, &UserManager::handleListViewClick);
     connect(ui->pbAddUser, &QAbstractButton::clicked, this, &UserManager::handleUserAdd);
     connect(ui->pbEditUser, &QAbstractButton::clicked, this, &UserManager::handleUserEdit);

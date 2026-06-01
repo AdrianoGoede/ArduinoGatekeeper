@@ -22,7 +22,7 @@ private slots:
     void selectLocalKeyFile();
 
 signals:
-    void connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath);
+    void connectToBroker(const QString& address, qint16 port, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath);
 
 private:
     Ui::Connection* ui;

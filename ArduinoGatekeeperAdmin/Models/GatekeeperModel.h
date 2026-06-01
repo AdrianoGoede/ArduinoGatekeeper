@@ -40,7 +40,7 @@ private slots:
     void mqttClientStateChanged(QMqttClient::ClientState state);
 
 public slots:
-    void connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath);
+    void connectToBroker(const QString& address, qint16 port, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath);
     void updateUserList(const QList<UserEntry>& entries);
 
 signals:

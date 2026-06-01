@@ -14,7 +14,7 @@ GatekeeperModel::GatekeeperModel(QObject* parent) : QObject(parent), _mqttClient
     connect(_mqttClient, &QMqttClient::stateChanged, this, &GatekeeperModel::mqttClientStateChanged);
 }
 
-void GatekeeperModel::connectToBroker(const QString& address, qint16 port, const QString& userName, const QString& password, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath) {
+void GatekeeperModel::connectToBroker(const QString& address, qint16 port, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath) {
     QFile caFile(caCertPath);
     QFile clientCertFile(clientCertPath);
     QFile clientKeyFile(clientKeyPath);
@@ -49,8 +49,6 @@ void GatekeeperModel::connectToBroker(const QString& address, qint16 port, const
 
         _mqttClient->setHostname(address);
         _mqttClient->setPort(port);
-        _mqttClient->setUsername(userName);
-        _mqttClient->setPassword(password);
         _mqttClient->setClientId(MQTT_CLIENT_ID);
 
         _mqttClient->connectToHostEncrypted(sslConf);

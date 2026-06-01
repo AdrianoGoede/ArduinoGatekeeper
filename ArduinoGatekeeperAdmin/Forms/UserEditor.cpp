@@ -10,9 +10,6 @@ UserEditor::UserEditor(QWidget *parent) : QDialog(parent), ui(new Ui::UserEditor
         QRegularExpression("[0-9A-Fa-f]*"),
         ui->leUid
     ));
-
-    connect(ui->bbButtons, &QDialogButtonBox::accepted, this, &QDialog::accept);
-    connect(ui->bbButtons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
 UserEditor::~UserEditor() { delete ui; }
