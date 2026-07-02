@@ -1,1 +1,3 @@
-database/ssl/*
+ssl_root
+database/ssl
+mqtt_broker/ssl
