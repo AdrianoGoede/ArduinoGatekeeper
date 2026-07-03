@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  database:
+    image: agk_database
+    build: ./database
+    env_file:
+      - ./database/database.env
+  mqtt_broker:
+    image: agk_mqtt_broker
+    build: ./mqtt_broker
+    ports:
+      - 8883:8883
