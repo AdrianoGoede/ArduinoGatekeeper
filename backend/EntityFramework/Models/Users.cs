@@ -2,14 +2,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ArduinoGatekeeperBackend.EntityFramework.Models
 {
-    public class Admin
+    public class User
     {
         [Key]
         public int Id { get; set; }
 
-        public string Label { get; set; }
+        public string CardId { get; set; }
 
-        public bool Active { get; set; }
+        public string Label { get; set; }
 
         public DateTime CreatedAt { get; set; }
     }

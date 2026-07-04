@@ -12,6 +12,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.ModelBuilder;
 using ArduinoGatekeeperBackend.EntityFramework;
 using ArduinoGatekeeperBackend.EntityFramework.Models;
+using ArduinoGatekeeperBackend.Services.Interfaces;
+using ArduinoGatekeeperBackend.Services;
+using Microsoft.AspNetCore.OData.Routing.Conventions;
+using Microsoft.OData.Edm;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,20 +24,19 @@ builder.Services.AddDbContext<ArduinoGatekeeperContext>(options => options.UseNp
 
 // OData
 var modelBuilder = new ODataConventionModelBuilder();
-modelBuilder.EntitySet<Admin>("admins");
-// modelBuilder.EntitySet<User>("Users");
-// modelBuilder.EntitySet<Door>("Doors");
-// modelBuilder.EntitySet<AccessLog>("Logs");
+modelBuilder.EntitySet<Admin>("Admins");
+modelBuilder.EntitySet<User>("Users");
+modelBuilder.EntitySet<Door>("Doors");
 
 builder.Services.AddControllers()
     .AddOData(options => options
+        .AddRouteComponents("api", modelBuilder.GetEdmModel())
         .Select()
         .Filter()
         .OrderBy()
         .Expand()
         .Count()
-        .SetMaxTop(1000)
-        .AddRouteComponents("api", modelBuilder.GetEdmModel()));
+        .SetMaxTop(1000));
 
 // Authentication — mTLS client certificate, CN validated against DB
 // builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme)
@@ -70,13 +73,15 @@ builder.Services.AddControllers()
 builder.Services.AddAuthorization();
 
 // SignalR — real-time push to log analyzer
-builder.Services.AddSignalR();
+// builder.Services.AddSignalR();
 
 // MQTT background service
 // builder.Services.AddHostedService<MqttService>();
 
 // User list publisher — republishes UserList to broker on user changes
-// builder.Services.AddScoped<UserListService>();
+builder.Services.AddScoped<IAdminsService, AdminsService>();
+builder.Services.AddScoped<IUsersService, UsersService>();
+builder.Services.AddScoped<IDoorsService, DoorsService>();
 
 // Kestrel — mTLS, TLS 1.3 only
 // builder.WebHost.ConfigureKestrel(options => {
@@ -109,11 +114,12 @@ builder.Services.AddSignalR();
 var app = builder.Build();
 
 // Middleware pipeline
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
+// app.UseHttpsRedirection();
+// app.UseAuthentication();
+// app.UseAuthorization();
 
 // Endpoints
+app.UseRouting();
 app.MapControllers();
 
 app.Run();

@@ -6,42 +6,42 @@ using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace ArduinoGatekeeperBackend.Controllers
 {
-    public class AdminsController : ODataController
+    public class DoorsController : ODataController
     {
-        private readonly IAdminsService _adminsService;
+        private readonly IDoorsService _doorsService;
 
-        public AdminsController(IAdminsService adminsService)
+        public DoorsController(IDoorsService doorsService)
         {
-            _adminsService = adminsService ?? throw new ArgumentNullException(nameof(adminsService));
+            _doorsService = doorsService ?? throw new ArgumentNullException(nameof(doorsService));
         }
 
         [EnableQuery]
-        public IActionResult Get() => Ok(_adminsService.GetAll());
+        public IActionResult Get() => Ok(_doorsService.GetAll());
 
         [EnableQuery]
         public async Task<IActionResult> Get([FromODataUri] int key)
         {
-            var result = await _adminsService.GetByIdAsync(key);
+            var result = await _doorsService.GetByIdAsync(key);
             return (result is not null ? Ok(result) : NotFound());
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] AdminDTO admin)
+        public async Task<IActionResult> Post([FromBody] DoorDTO door)
         {
             try
             {
-                var newAdmin = await _adminsService.CreateAsync(admin);
-                return Created($"api/Admins({newAdmin.Id})", newAdmin);
+                var newDoor = await _doorsService.CreateAsync(door);
+                return Created($"api/Doors({newDoor.Id})", newDoor);
             }
             catch (ArgumentException ex) { return BadRequest(ex.Message); }
         }
 
         [HttpPatch]
-        public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] AdminDTO modified)
+        public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] DoorDTO modified)
         {
             try
             {
-                var result = await _adminsService.UpdateAsync(key, modified);
+                var result = await _doorsService.UpdateAsync(key, modified);
                 return Accepted(result);
             }
             catch (ArgumentException ex) { return BadRequest(ex.Message); }
@@ -52,7 +52,7 @@ namespace ArduinoGatekeeperBackend.Controllers
         {
             try
             {
-                await _adminsService.DeleteAsync(key);
+                await _doorsService.DeleteAsync(key);
                 return NoContent();
             }
             catch (ArgumentException ex) { return BadRequest(ex.Message); }

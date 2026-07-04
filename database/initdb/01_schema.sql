@@ -1,6 +1,5 @@
 CREATE TABLE admins (
     id SERIAL NOT NULL PRIMARY KEY,
-    common_name VARCHAR(100) NOT NULL,
     label VARCHAR(200) NOT NULL,
     active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -10,16 +9,13 @@ CREATE TABLE users (
     id SERIAL NOT NULL PRIMARY KEY,
     card_id VARCHAR(10) UNIQUE NOT NULL,
     label VARCHAR(200) NOT NULL,
-    authorized BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    revoked_at TIMESTAMPTZ
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE doors (
     id SERIAL NOT NULL PRIMARY KEY,
     label VARCHAR(100) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    revoked_at TIMESTAMPTZ
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE permissions (

@@ -6,42 +6,42 @@ using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace ArduinoGatekeeperBackend.Controllers
 {
-    public class AdminsController : ODataController
+    public class UsersController : ODataController
     {
-        private readonly IAdminsService _adminsService;
+        private readonly IUsersService _usersService;
 
-        public AdminsController(IAdminsService adminsService)
+        public UsersController(IUsersService usersService)
         {
-            _adminsService = adminsService ?? throw new ArgumentNullException(nameof(adminsService));
+            _usersService = usersService ?? throw new ArgumentNullException(nameof(usersService));
         }
 
         [EnableQuery]
-        public IActionResult Get() => Ok(_adminsService.GetAll());
+        public IActionResult Get() => Ok(_usersService.GetAll());
 
         [EnableQuery]
         public async Task<IActionResult> Get([FromODataUri] int key)
         {
-            var result = await _adminsService.GetByIdAsync(key);
+            var result = await _usersService.GetByIdAsync(key);
             return (result is not null ? Ok(result) : NotFound());
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] AdminDTO admin)
+        public async Task<IActionResult> Post([FromBody] UserDTO user)
         {
             try
             {
-                var newAdmin = await _adminsService.CreateAsync(admin);
-                return Created($"api/Admins({newAdmin.Id})", newAdmin);
+                var newUser = await _usersService.CreateAsync(user);
+                return Created($"api/Users({newUser.Id})", newUser);
             }
             catch (ArgumentException ex) { return BadRequest(ex.Message); }
         }
 
         [HttpPatch]
-        public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] AdminDTO modified)
+        public async Task<IActionResult> Patch([FromODataUri] int key, [FromBody] UserDTO modified)
         {
             try
             {
-                var result = await _adminsService.UpdateAsync(key, modified);
+                var result = await _usersService.UpdateAsync(key, modified);
                 return Accepted(result);
             }
             catch (ArgumentException ex) { return BadRequest(ex.Message); }
@@ -52,7 +52,7 @@ namespace ArduinoGatekeeperBackend.Controllers
         {
             try
             {
-                await _adminsService.DeleteAsync(key);
+                await _usersService.DeleteAsync(key);
                 return NoContent();
             }
             catch (ArgumentException ex) { return BadRequest(ex.Message); }
