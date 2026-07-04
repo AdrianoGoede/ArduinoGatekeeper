@@ -2,6 +2,9 @@ ssl_root
 database/ssl
 database/*.env
 database/**/*.env
+backend/bin
+backend/obj
+backend/ssl
 mqtt_broker/ssl
 mqtt_broker/*.env
 mqtt_broker/**/*.env

@@ -1,0 +1,11 @@
+CREATE USER agk_backend WITH PASSWORD '1234';
+GRANT CONNECT ON DATABASE postgres TO agk_backend;
+GRANT USAGE ON SCHEMA public TO agk_backend;
+
+GRANT SELECT, INSERT, UPDATE ON TABLE admins TO agk_backend;
+GRANT SELECT, INSERT, UPDATE ON TABLE users TO agk_backend;
+GRANT SELECT, INSERT, UPDATE ON TABLE doors TO agk_backend;
+GRANT SELECT, INSERT, UPDATE ON TABLE permissions TO agk_backend;
+GRANT SELECT, INSERT ON TABLE access_log TO agk_backend;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO agk_backend;

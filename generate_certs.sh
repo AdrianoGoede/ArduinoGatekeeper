@@ -11,6 +11,14 @@ openssl req -new -key database.key -out database.csr -subj "/CN=agk_database";
 openssl x509 -req -days 3650 -in database.csr -CA ../../ssl_root/ca.crt -CAkey ../../ssl_root/ca.key -CAcreateserial -out database.crt;
 cp ../../ssl_root/ca.crt ca.crt && rm database.csr && cd ..;
 
+# Generate Backend cert
+cd ../backend;
+mkdir ssl && cd ssl;
+openssl ecparam -name prime256v1 -genkey -noout -out backend.key;
+openssl req -new -key backend.key -out backend.csr -subj "/CN=agk_backend";
+openssl x509 -req -days 3650 -in backend.csr -CA ../../ssl_root/ca.crt -CAkey ../../ssl_root/ca.key -CAcreateserial -out backend.crt;
+cp ../../ssl_root/ca.crt ca.crt && rm backend.csr && cd ..;
+
 # Generate MQTT broker cert
 cd ../mqtt_broker;
 mkdir ssl && cd ssl;

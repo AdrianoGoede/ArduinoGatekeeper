@@ -1,5 +1,6 @@
 CREATE TABLE admins (
     id SERIAL NOT NULL PRIMARY KEY,
+    common_name VARCHAR(100) NOT NULL,
     label VARCHAR(200) NOT NULL,
     active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
