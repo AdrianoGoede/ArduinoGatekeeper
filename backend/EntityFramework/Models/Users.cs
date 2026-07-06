@@ -12,5 +12,7 @@ namespace ArduinoGatekeeperBackend.EntityFramework.Models
         public string Label { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
+        public IEnumerable<Permission> Permissions { get; set; }
     }
 }

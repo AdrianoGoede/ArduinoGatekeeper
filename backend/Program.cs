@@ -14,8 +14,6 @@ using ArduinoGatekeeperBackend.EntityFramework;
 using ArduinoGatekeeperBackend.EntityFramework.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
 using ArduinoGatekeeperBackend.Services;
-using Microsoft.AspNetCore.OData.Routing.Conventions;
-using Microsoft.OData.Edm;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +25,7 @@ var modelBuilder = new ODataConventionModelBuilder();
 modelBuilder.EntitySet<Admin>("Admins");
 modelBuilder.EntitySet<User>("Users");
 modelBuilder.EntitySet<Door>("Doors");
+modelBuilder.EntitySet<Permission>("Permissions");
 
 builder.Services.AddControllers()
     .AddOData(options => options
@@ -82,6 +81,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAdminsService, AdminsService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<IDoorsService, DoorsService>();
+builder.Services.AddScoped<IPermissionsService, PermissionsService>();
 
 // Kestrel — mTLS, TLS 1.3 only
 // builder.WebHost.ConfigureKestrel(options => {
@@ -119,7 +119,6 @@ var app = builder.Build();
 // app.UseAuthorization();
 
 // Endpoints
-app.UseRouting();
 app.MapControllers();
 
 app.Run();
