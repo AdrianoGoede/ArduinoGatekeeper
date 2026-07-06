@@ -13,7 +13,7 @@ using Microsoft.OData.ModelBuilder;
 using ArduinoGatekeeperBackend.EntityFramework;
 using ArduinoGatekeeperBackend.EntityFramework.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
-using ArduinoGatekeeperBackend.Services;
+using ArduinoGatekeeperBackend.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +26,7 @@ modelBuilder.EntitySet<Admin>("Admins");
 modelBuilder.EntitySet<User>("Users");
 modelBuilder.EntitySet<Door>("Doors");
 modelBuilder.EntitySet<Permission>("Permissions");
+modelBuilder.EntitySet<AccessLog>("AccessLogs");
 
 builder.Services.AddControllers()
     .AddOData(options => options
@@ -82,6 +83,7 @@ builder.Services.AddScoped<IAdminsService, AdminsService>();
 builder.Services.AddScoped<IUsersService, UsersService>();
 builder.Services.AddScoped<IDoorsService, DoorsService>();
 builder.Services.AddScoped<IPermissionsService, PermissionsService>();
+builder.Services.AddScoped<IAccessLogsService, AccessLogsService>();
 
 // Kestrel — mTLS, TLS 1.3 only
 // builder.WebHost.ConfigureKestrel(options => {

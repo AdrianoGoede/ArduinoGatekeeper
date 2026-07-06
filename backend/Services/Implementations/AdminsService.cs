@@ -3,7 +3,7 @@ using ArduinoGatekeeperBackend.EntityFramework.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace ArduinoGatekeeperBackend.Services
+namespace ArduinoGatekeeperBackend.Services.Implementations
 {
     public class AdminsService : IAdminsService
     {

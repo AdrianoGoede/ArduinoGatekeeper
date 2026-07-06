@@ -32,7 +32,7 @@ CREATE TABLE access_log (
     user_id INT NOT NULL,
     door_id INT NOT NULL,
     granted BOOLEAN NOT NULL,
-    scanned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     FOREIGN KEY (user_id) REFERENCES users (id),
     FOREIGN KEY (door_id) REFERENCES doors (id)
 );
