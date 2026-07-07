@@ -14,6 +14,7 @@ using ArduinoGatekeeperBackend.EntityFramework;
 using ArduinoGatekeeperBackend.EntityFramework.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
 using ArduinoGatekeeperBackend.Services.Implementations;
+using ArduinoGatekeeperBackend.Mqtt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,7 +77,7 @@ builder.Services.AddAuthorization();
 // builder.Services.AddSignalR();
 
 // MQTT background service
-// builder.Services.AddHostedService<MqttService>();
+builder.Services.AddHostedService<MqttService>();
 
 // User list publisher — republishes UserList to broker on user changes
 builder.Services.AddScoped<IAdminsService, AdminsService>();
