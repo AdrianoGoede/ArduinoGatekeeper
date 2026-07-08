@@ -20,8 +20,10 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
         
         public async Task<AccessLog> CreateAsync(AccessLogDTO log)
         {
+            var userId = await _dbContext.Users.AsNoTracking().Where(it => it.CardId == log.CardId).Select(it => it.Id).SingleOrDefaultAsync();
+
             var newLog = _dbContext.AccessLogs.Add(new AccessLog {
-                UserId = (log.UserId ?? 0),
+                UserId = userId,
                 DoorId = (log.DoorId ?? 0),
                 Granted = (log.Granted ?? false)
             });
