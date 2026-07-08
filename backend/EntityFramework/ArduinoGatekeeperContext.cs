@@ -10,6 +10,7 @@ namespace ArduinoGatekeeperBackend.EntityFramework
         public DbSet<Door> Doors { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<AccessLog> AccessLogs { get; set; }
+        public DbSet<DoorLog> DoorLogs { get; set; }
         
         public ArduinoGatekeeperContext(DbContextOptions<ArduinoGatekeeperContext> options) : base(options) {}
 
@@ -63,6 +64,16 @@ namespace ArduinoGatekeeperBackend.EntityFramework
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired(true).HasDefaultValueSql("CURRENT_TIMESTAMP");
                 entity.HasOne(e => e.User).WithMany(o => o.AccessLogs).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.NoAction);
                 entity.HasOne(e => e.Door).WithMany(o => o.AccessLogs).HasForeignKey(e => e.DoorId).OnDelete(DeleteBehavior.NoAction);
+            });
+
+            modelBuilder.Entity<DoorLog>(entity => {
+                entity.ToTable("door_log");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id").IsRequired(true).ValueGeneratedOnAdd();
+                entity.Property(e => e.DoorId).HasColumnName("door_id").IsRequired(true);
+                entity.Property(e => e.Online).HasColumnName("online").IsRequired(true);
+                entity.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired(true).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                entity.HasOne(e => e.Door).WithMany(o => o.DoorLogs).HasForeignKey(e => e.DoorId).OnDelete(DeleteBehavior.NoAction);
             });
             
             base.OnModelCreating(modelBuilder);

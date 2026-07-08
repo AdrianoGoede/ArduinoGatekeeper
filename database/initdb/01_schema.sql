@@ -27,6 +27,14 @@ CREATE TABLE permissions (
     FOREIGN KEY (door_id) REFERENCES doors (id)
 );
 
+CREATE TABLE door_log (
+    id BIGSERIAL NOT NULL PRIMARY KEY,
+    door_id INT NOT NULL,
+    online BOOLEAN NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    FOREIGN KEY (door_id) REFERENCES doors (id)
+);
+
 CREATE TABLE access_log (
     id BIGSERIAL NOT NULL PRIMARY KEY,
     user_id INT NOT NULL,

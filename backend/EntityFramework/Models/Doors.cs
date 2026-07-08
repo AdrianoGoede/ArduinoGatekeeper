@@ -14,5 +14,7 @@ namespace ArduinoGatekeeperBackend.EntityFramework.Models
         public IEnumerable<Permission> Permissions { get; set; }
 
         public IEnumerable<AccessLog> AccessLogs { get; set; }
+
+        public IEnumerable<DoorLog> DoorLogs { get; set; }
     }
 }

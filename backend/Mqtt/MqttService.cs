@@ -28,6 +28,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
             clientKey.ImportFromPem(File.ReadAllText(_config.GetValue<string>("Ssl:ServerKey")!));
 
             _client.ApplicationMessageReceivedAsync += handleIncomingMessageAsync;
+            _client.DisconnectedAsync += handleDesconnectAsync;
             
             var options = new MqttClientOptionsBuilder()
                 .WithTcpServer(_config.GetValue<string>("MqttBroker:Host"), _config.GetValue<int>("MqttBroker:Port", 8883))
@@ -71,7 +72,16 @@ namespace ArduinoGatekeeperBackend.Mqtt
 
         private async Task handleDeviceStatusMessageAsync(string payload)
         {
-            
+            var status = JsonConvert.DeserializeObject<DeviceStatus>(payload);
+            if (status is null) return;
+
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var doorLogsService = scope.ServiceProvider.GetRequiredService<IDoorLogsService>();
+            await doorLogsService.CreateAsync(new DoorLogDTO {
+                DoorId = int.Parse(status.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
+                Online = status.Online,
+                CreatedAt = status.CreatedAt
+            });
         }
 
         private async Task handleScanMessageAsync(string payload)
@@ -87,6 +97,14 @@ namespace ArduinoGatekeeperBackend.Mqtt
                 Granted = scan.Granted,
                 CreatedAt = scan.Timestamp
             });
+        }
+
+        private async Task handleDesconnectAsync(MqttClientDisconnectedEventArgs e)
+        {
+            var delay = _config.GetValue<int>("MqttBroker:ReconnectionDelay", 5);
+            Console.WriteLine($"MQTT disconnected, reconnecting in {delay}s...");
+            await Task.Delay(TimeSpan.FromSeconds(delay));
+            await _client!.ReconnectAsync();
         }
     }
 }
