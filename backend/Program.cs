@@ -15,6 +15,7 @@ using ArduinoGatekeeperBackend.EntityFramework.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
 using ArduinoGatekeeperBackend.Services.Implementations;
 using ArduinoGatekeeperBackend.Mqtt;
+using ArduinoGatekeeperBackend.Websocket;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,7 +76,7 @@ builder.Services.AddControllers()
 builder.Services.AddAuthorization();
 
 // SignalR — real-time push to log analyzer
-// builder.Services.AddSignalR();
+builder.Services.AddSignalR();
 
 // MQTT background service
 builder.Services.AddHostedService<MqttService>();
@@ -125,5 +126,6 @@ var app = builder.Build();
 
 // Endpoints
 app.MapControllers();
+app.MapHub<LogHub>("/logs");
 
 app.Run();

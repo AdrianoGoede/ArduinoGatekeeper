@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using ArduinoGatekeeperBackend.Mqtt.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
+using ArduinoGatekeeperBackend.Websocket;
+using Microsoft.AspNetCore.SignalR;
 using MQTTnet;
 using Newtonsoft.Json;
 
@@ -11,12 +13,14 @@ namespace ArduinoGatekeeperBackend.Mqtt
     {
         private readonly IConfiguration _config;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IHubContext<LogHub> _hubContext;
         private IMqttClient? _client;
 
-        public MqttService(IConfiguration config, IServiceScopeFactory scopeFactory)
+        public MqttService(IConfiguration config, IServiceScopeFactory scopeFactory, IHubContext<LogHub> hubContext)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+            _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
         }
         
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -77,11 +81,13 @@ namespace ArduinoGatekeeperBackend.Mqtt
 
             await using var scope = _scopeFactory.CreateAsyncScope();
             var doorLogsService = scope.ServiceProvider.GetRequiredService<IDoorLogsService>();
-            await doorLogsService.CreateAsync(new DoorLogDTO {
+            var result = await doorLogsService.CreateAsync(new DoorLogDTO {
                 DoorId = int.Parse(status.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
                 Online = status.Online,
                 CreatedAt = status.CreatedAt
             });
+
+            await _hubContext.Clients.All.SendAsync("NewStatusEntry", result);
         }
 
         private async Task handleScanMessageAsync(string payload)
@@ -91,12 +97,14 @@ namespace ArduinoGatekeeperBackend.Mqtt
 
             await using var scope = _scopeFactory.CreateAsyncScope();
             var accessLogsService = scope.ServiceProvider.GetRequiredService<IAccessLogsService>();
-            await accessLogsService.CreateAsync(new AccessLogDTO {
+            var result = await accessLogsService.CreateAsync(new AccessLogDTO {
                 CardId = (scan.CardId ?? string.Empty),
                 DoorId = int.Parse(scan.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
                 Granted = scan.Granted,
                 CreatedAt = scan.Timestamp
             });
+
+            await _hubContext.Clients.All.SendAsync("NewLogEntry", result);
         }
 
         private async Task handleDesconnectAsync(MqttClientDisconnectedEventArgs e)
