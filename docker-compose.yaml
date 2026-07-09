@@ -17,7 +17,7 @@ services:
     build: ./backend
     container_name: agk_backend
     ports:
-      - 5148:8080
+      - 443:443
     depends_on:
       - database
       - mqtt_broker

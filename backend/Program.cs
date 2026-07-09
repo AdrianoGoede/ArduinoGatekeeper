@@ -16,6 +16,7 @@ using ArduinoGatekeeperBackend.Services.Interfaces;
 using ArduinoGatekeeperBackend.Services.Implementations;
 using ArduinoGatekeeperBackend.Mqtt;
 using ArduinoGatekeeperBackend.Websocket;
+using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,37 +91,37 @@ builder.Services.AddScoped<IAccessLogsService, AccessLogsService>();
 builder.Services.AddScoped<IDoorLogsService, DoorLogsService>();
 
 // Kestrel — mTLS, TLS 1.3 only
-// builder.WebHost.ConfigureKestrel(options => {
-//     options.ListenAnyIP(443, listen => {
-//         listen.UseHttps(https => {
-//             // Server certificate
-//             https.ServerCertificate = new X509Certificate2(
-//                 builder.Configuration["Certs:ServerCert"]!,
-//                 builder.Configuration["Certs:ServerKey"]!
-//             );
+builder.WebHost.ConfigureKestrel(options => {
+    options.ListenAnyIP(443, listen => {
+        listen.UseHttps(https => {
+            // Server certificate
+            var serverCert = X509CertificateLoader.LoadCertificateFromFile(builder.Configuration.GetValue<string>("Ssl:ServerCert")!);
+            using var serverKey = ECDsa.Create();
+            serverKey.ImportFromPem(File.ReadAllText(builder.Configuration.GetValue<string>("Ssl:ServerKey")!));
+            https.ServerCertificate = serverCert.CopyWithPrivateKey(serverKey);
 
-//             // Require client certificate (mTLS)
-//             https.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+            // Require client certificate (mTLS)
+            // https.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
 
-//             // Only accept certs signed by our CA
-//             https.ClientCertificateValidation = (cert, chain, errors) => {
-//                 var ca = new X509Certificate2(builder.Configuration["Certs:CaCert"]!);
-//                 chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-//                 chain.ChainPolicy.CustomTrustStore.Add(ca);
-//                 chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-//                 return chain.Build(new X509Certificate2(cert));
-//             };
+            // Only accept certs signed by our CA
+            // https.ClientCertificateValidation = (cert, chain, errors) => {
+            //     var ca = new X509Certificate2(builder.Configuration["Certs:CaCert"]!);
+            //     chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+            //     chain.ChainPolicy.CustomTrustStore.Add(ca);
+            //     chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+            //     return chain.Build(new X509Certificate2(cert));
+            // };
 
-//             // TLS 1.3 only — enforces AES-GCM and ChaCha20 cipher suites
-//             https.SslProtocols = SslProtocols.Tls13;
-//         });
-//     });
-// });
+            // TLS 1.3 only — enforces AES-GCM and ChaCha20 cipher suites
+            https.SslProtocols = SslProtocols.Tls13;
+        });
+    });
+});
 
 var app = builder.Build();
 
 // Middleware pipeline
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 // app.UseAuthentication();
 // app.UseAuthorization();
 
