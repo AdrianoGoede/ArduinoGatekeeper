@@ -26,3 +26,11 @@ openssl ecparam -name prime256v1 -genkey -noout -out mqtt_broker.key;
 openssl req -new -key mqtt_broker.key -out mqtt_broker.csr -subj "/CN=agk_mqtt_broker";
 openssl x509 -req -days 3650 -in mqtt_broker.csr -CA ../../ssl_root/ca.crt -CAkey ../../ssl_root/ca.key -CAcreateserial -out mqtt_broker.crt;
 cp ../../ssl_root/ca.crt ca.crt && rm mqtt_broker.csr && cd ..;
+
+# Generate Arduino cert
+cd ../device;
+mkdir ssl && cd ssl;
+openssl ecparam -name prime256v1 -genkey -noout -out device.key;
+openssl req -new -key device.key -out device.csr -subj "/CN=agk_door_1";
+openssl x509 -req -days 3650 -in device.csr -CA ../../ssl_root/ca.crt -CAkey ../../ssl_root/ca.key -CAcreateserial -out device.crt;
+cp ../../ssl_root/ca.crt ca.crt && rm device.csr && cd ..;

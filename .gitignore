@@ -8,3 +8,4 @@ backend/ssl
 mqtt_broker/ssl
 mqtt_broker/*.env
 mqtt_broker/**/*.env
+device/ssl
