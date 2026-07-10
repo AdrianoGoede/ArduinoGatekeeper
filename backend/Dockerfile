@@ -11,9 +11,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /App/out ./
 
-COPY ssl/ca.crt      /usr/local/share/ca-certificates/agk_ca.crt
-RUN update-ca-certificates
-
 COPY ssl/ca.crt      certs/ca.crt
 COPY ssl/backend.crt certs/backend.crt
 COPY ssl/backend.key certs/backend.key

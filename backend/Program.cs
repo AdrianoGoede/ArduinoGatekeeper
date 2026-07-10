@@ -101,16 +101,17 @@ builder.WebHost.ConfigureKestrel(options => {
             https.ServerCertificate = serverCert.CopyWithPrivateKey(serverKey);
 
             // Require client certificate (mTLS)
-            // https.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
+            https.ClientCertificateMode = ClientCertificateMode.RequireCertificate;
 
             // Only accept certs signed by our CA
-            // https.ClientCertificateValidation = (cert, chain, errors) => {
-            //     var ca = new X509Certificate2(builder.Configuration["Certs:CaCert"]!);
-            //     chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
-            //     chain.ChainPolicy.CustomTrustStore.Add(ca);
-            //     chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-            //     return chain.Build(new X509Certificate2(cert));
-            // };
+            https.ClientCertificateValidation = (cert, chain, errors) => {
+                var ca = new X509Certificate2(builder.Configuration["Ssl:CaCert"]!);
+                chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
+                chain.ChainPolicy.CustomTrustStore.Clear();
+                chain.ChainPolicy.CustomTrustStore.Add(ca);
+                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+                return chain.Build(new X509Certificate2(cert));
+            };
 
             // TLS 1.3 only — enforces AES-GCM and ChaCha20 cipher suites
             https.SslProtocols = SslProtocols.Tls13;

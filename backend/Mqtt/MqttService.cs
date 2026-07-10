@@ -39,7 +39,11 @@ namespace ArduinoGatekeeperBackend.Mqtt
                 .WithTlsOptions(tls => {
                     tls.UseTls(true);
                     tls.WithCertificateValidationHandler(ctx => {
+                        ctx.Chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                         ctx.Chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+                        ctx.Chain.ChainPolicy.CustomTrustStore.Clear();
+                        ctx.Chain.ChainPolicy.CustomTrustStore.Add(new X509Certificate2(_config.GetValue<string>("Ssl:CaCert")));
+                        ctx.Chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
                         return ctx.Chain.Build((X509Certificate2)ctx.Certificate);
                     });
                     tls.WithClientCertificates(new X509Certificate2Collection {
