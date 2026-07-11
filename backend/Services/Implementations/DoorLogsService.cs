@@ -23,7 +23,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             var newLog = _dbContext.DoorLogs.Add(new DoorLog {
                 DoorId = (log.DoorId ?? 0),
                 Online = (log.Online ?? false),
-                CreatedAt = (log.CreatedAt ?? DateTime.Now)
+                CreatedAt = (log.CreatedAt ?? DateTime.UtcNow)
             });
             await _dbContext.SaveChangesAsync();
             return newLog.Entity;

@@ -88,7 +88,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
             var result = await doorLogsService.CreateAsync(new DoorLogDTO {
                 DoorId = int.Parse(status.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
                 Online = status.Online,
-                CreatedAt = status.CreatedAt
+                CreatedAt = (status.Timestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(status.Timestamp ?? 0).UtcDateTime : null)
             });
 
             await _hubContext.Clients.All.SendAsync("NewStatusEntry", result);
@@ -105,7 +105,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
                 CardId = (scan.CardId ?? string.Empty),
                 DoorId = int.Parse(scan.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
                 Granted = scan.Granted,
-                CreatedAt = scan.Timestamp
+                CreatedAt = (scan.Timestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(scan.Timestamp ?? 0).UtcDateTime : null)
             });
 
             await _hubContext.Clients.All.SendAsync("NewLogEntry", result);

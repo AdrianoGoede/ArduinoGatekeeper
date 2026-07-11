@@ -13,22 +13,21 @@
 // Network
 #define WIFI_SSID                       ""
 #define WIFI_PASSWORD                   ""
-#define MQTT_BROKER_ADDRESS             ""
-#define MQTT_BROKER_PORT                8883
-#define MQTT_DEVICE_ID                  ""
-#define MQTT_QOS_LEVEL                  2
-#define MQTT_KEEP_ALIVE_INTERVAL        5000
 
 // NTP
 #define NTP_SERVER_PRIMARY              "europe.pool.ntp.org"
 #define NTP_SERVER_SECONDARY            "pool.ntp.org"
-#define TIME_OFFSET                     0
-#define TIME_RESYNC_INTERVAL            3600000
 
 // MQTT
-#define ACTIVITY_LOG_TOPIC              ""
-#define DEVICE_STATUS_TOPIC             ""
-#define AUTHORIZED_USERS_TOPIC          ""
+#define MQTT_BROKER_ADDRESS             ""
+#define MQTT_BROKER_PORT                8883
+#define MQTT_DEVICE_ID                  ""
+#define MQTT_QOS_LEVEL                  2
+#define MQTT_KEEP_ALIVE_INTERVAL        10000
+#define SCAN_TOPIC                      "AGK/+/scan"
+#define DEVICE_STATUS_TOPIC             "AGK/+/dev_status"
+#define ADD_USER_TOPIC                  "AGK/users/add"
+#define REMOVE_USER_TOPIC               "AGK/users/remove"
 
 // mTLS
 const char CA_CERT[] PROGMEM = R"EOF(

@@ -4,6 +4,6 @@ namespace ArduinoGatekeeperBackend.Mqtt.Models
     {
         public string DeviceId { get; set; }
         public bool Online { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public long? Timestamp { get; set; }
     }
 }

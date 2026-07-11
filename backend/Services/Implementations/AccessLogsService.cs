@@ -26,7 +26,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
                 UserId = userId,
                 DoorId = (log.DoorId ?? 0),
                 Granted = (log.Granted ?? false),
-                CreatedAt = (log.CreatedAt ?? DateTime.Now)
+                CreatedAt = (log.CreatedAt ?? DateTime.UtcNow)
             });
             await _dbContext.SaveChangesAsync();
             return newLog.Entity;

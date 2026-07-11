@@ -5,6 +5,6 @@ namespace ArduinoGatekeeperBackend.Mqtt.Models
         public string CardId { get; set; }
         public string DeviceId { get; set; }
         public bool Granted { get; set; }
-        public DateTime Timestamp { get; set; }
+        public long? Timestamp { get; set; }
     }
 }
