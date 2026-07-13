@@ -24,6 +24,7 @@ class Network {
   public:
     static bool begin();
     static bool handleConnections();
+    static void sendLogMessage(const String& payload);
 };
 
 #endif

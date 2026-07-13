@@ -7,7 +7,7 @@ CREATE TABLE admins (
 
 CREATE TABLE users (
     id SERIAL NOT NULL PRIMARY KEY,
-    card_id VARCHAR(10) UNIQUE NOT NULL,
+    card_id VARCHAR(8) UNIQUE NOT NULL,
     label VARCHAR(200) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );

@@ -115,7 +115,7 @@ String Network::getJsonStatusMessage(bool online, bool addTimestamp) {
     doc["Timestamp"] = now;
   }
   
-  serializeJson(doc, _strBuffer);
+  serializeJson(doc, _strBuffer, STRING_BUFFER_SIZE);
   return String(_strBuffer);
 }
 
@@ -133,3 +133,5 @@ bool Network::handleConnections() {
   _mqttClient.poll();
   return true;
 }
+
+void Network::sendLogMessage(const String& payload) { publishMessage(_scanTopic, payload); }
