@@ -16,13 +16,13 @@ void setup() {
   pinMode(ACCESS_DENIED_LED_PIN, OUTPUT);
   pinMode(ACCESS_GRANTED_LED_PIN, OUTPUT);
 
-  if (!Network::begin()) {
-    Serial.println("Network module setup failed! aborting...");
+  if (!RfidController::begin()) {
+    Serial.println("RFID module failed! aborting...");
     while (true) {}
   }
-
-  if (!RfidController::begin()) {
-    Serial.println("Access control module failed! aborting...");
+  
+  if (!Network::begin(RfidController::AddUser, RfidController::RemoveUser)) {
+    Serial.println("Network module setup failed! aborting...");
     while (true) {}
   }
 

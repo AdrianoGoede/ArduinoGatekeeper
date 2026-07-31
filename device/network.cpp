@@ -1,24 +1,34 @@
-#include <stdio.h>
-#include <ArduinoJson.h>
 #include "network.h"
+#include <ArduinoJson.h>
 
 WiFiClientSecure Network::_wifiClient;
 MqttClient Network::_mqttClient(_wifiClient);
 String Network::_scanTopic;
 String Network::_deviceStatusStopic;
+String Network::_addUserTopic;
+String Network::_removeUserTopic;
+MqttMessageCallback Network::_addUserCallback;
+MqttMessageCallback Network::_removeUserCallback;
 char Network::_strBuffer[STRING_BUFFER_SIZE];
 
-bool Network::begin() {
-  return (initialize() && connectWiFi() && synchronizeClock() && connectToMqttBroker());
+bool Network::begin(MqttMessageCallback addUserCallback, MqttMessageCallback removeUserCallback) {
+  return (initialize(addUserCallback, removeUserCallback) && connectWiFi() && synchronizeClock() && connectToMqttBroker());
 }
 
-bool Network::initialize() {
+bool Network::initialize(MqttMessageCallback addUserCallback, MqttMessageCallback removeUserCallback) {
   Serial.print("Initializing...");
+
+  _addUserCallback = addUserCallback;
+  _removeUserCallback = removeUserCallback;
   
   _scanTopic = String(SCAN_TOPIC);
   _scanTopic.replace("+", MQTT_DEVICE_ID);
   _deviceStatusStopic = String(DEVICE_STATUS_TOPIC);
   _deviceStatusStopic.replace("+", MQTT_DEVICE_ID);
+  _addUserTopic = String(ADD_USER_TOPIC);
+  _addUserTopic.replace("+", MQTT_DEVICE_ID);
+  _removeUserTopic = String(REMOVE_USER_TOPIC);
+  _removeUserTopic.replace("+", MQTT_DEVICE_ID);
 
   _wifiClient.setCACert(CA_CERT);
   _wifiClient.setCertificate(CLIENT_CERT);
@@ -73,6 +83,8 @@ bool Network::connectToMqttBroker() {
   _mqttClient.setKeepAliveInterval(MQTT_KEEP_ALIVE_INTERVAL);
   publishLastWill(_deviceStatusStopic, getJsonStatusMessage(false, false));
 
+  _mqttClient.onMessage(Network::handleIncomingMessage);
+
   if (!_mqttClient.connect(MQTT_BROKER_ADDRESS, MQTT_BROKER_PORT)) {
     snprintf(
       _strBuffer,
@@ -84,8 +96,8 @@ bool Network::connectToMqttBroker() {
     return false;
   }
 
-  _mqttClient.subscribe(ADD_USER_TOPIC, MQTT_QOS_LEVEL);
-  _mqttClient.subscribe(REMOVE_USER_TOPIC, MQTT_QOS_LEVEL);
+  _mqttClient.subscribe(_addUserTopic, MQTT_QOS_LEVEL);
+  _mqttClient.subscribe(_removeUserTopic, MQTT_QOS_LEVEL);
   publishMessage(_deviceStatusStopic, getJsonStatusMessage(true, true));
 
   Serial.println("Success!");
@@ -117,6 +129,17 @@ String Network::getJsonStatusMessage(bool online, bool addTimestamp) {
   
   serializeJson(doc, _strBuffer, STRING_BUFFER_SIZE);
   return String(_strBuffer);
+}
+
+void Network::handleIncomingMessage(int messageSize) {
+  if (messageSize == 0) return;
+  String topic = _mqttClient.messageTopic();
+  String payload = _mqttClient.readString();
+
+  if (topic == _addUserTopic)
+    _addUserCallback(payload);
+  else if (topic == _removeUserTopic)
+    _removeUserCallback(payload);
 }
 
 bool Network::handleConnections() {

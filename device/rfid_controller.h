@@ -33,6 +33,8 @@ class RfidController {
     static bool begin();
     static RfidScanResult handleScan();
     static String getNextLogEntry();
+    static void AddUser(const String& payload);
+    static void RemoveUser(const String& payload);
 };
 
 #endif

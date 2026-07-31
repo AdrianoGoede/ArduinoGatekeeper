@@ -1,4 +1,4 @@
-#include "freertos/portmacro.h"
+#include "MFRC522.h"
 #include "rfid_controller.h"
 #include <ArduinoJson.h>
 
@@ -74,4 +74,36 @@ String RfidController::getUidAsString(const byte* uid, size_t length) {
 void RfidController::generateLogEntry(const String& uid, RfidScanResult result, time_t timestamp) {
   LogEntry entry{ uid, result, timestamp };
   xQueueSend(_logs, &entry, portMAX_DELAY);
+}
+
+void RfidController::AddUser(const String& payload) {
+  JsonDocument document;
+  deserializeJson(document, payload);
+  if (!document.is<JsonObject>()) return;
+  
+  String cardId = document["uid"];
+  if (cardId.isEmpty()) return;
+  JsonArray keyArray = document["key"];
+  if (keyArray.isNull() || keyArray.size() != MFRC522::MIFARE_Misc::MF_KEY_SIZE) return;
+
+  MFRC522::MIFARE_Key key;
+  for (uint8_t i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
+    key.keyByte[i] = keyArray[i];
+
+  xSemaphoreTake(_authUsersMutex, portMAX_DELAY);
+  _authorizedUsers[cardId] = key;
+  xSemaphoreGive(_authUsersMutex);
+}
+
+void RfidController::RemoveUser(const String& payload) {
+  JsonDocument document;
+  deserializeJson(document, payload);
+  if (!document.is<JsonObject>()) return;
+  
+  String cardId = document["uid"];
+  if (cardId.isEmpty()) return;
+
+  xSemaphoreTake(_authUsersMutex, portMAX_DELAY);
+  _authorizedUsers.erase(cardId);
+  xSemaphoreGive(_authUsersMutex);
 }
