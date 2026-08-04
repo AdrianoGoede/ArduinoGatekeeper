@@ -9,6 +9,8 @@ namespace ArduinoGatekeeperBackend.EntityFramework.Models
 
         public string CardId { get; set; }
 
+        public byte[] CardKey { get; set; }
+
         public string Label { get; set; }
 
         public DateTime CreatedAt { get; set; }

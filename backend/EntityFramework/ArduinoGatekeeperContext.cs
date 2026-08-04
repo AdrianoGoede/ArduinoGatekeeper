@@ -32,6 +32,7 @@ namespace ArduinoGatekeeperBackend.EntityFramework
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.Id).HasColumnName("id").IsRequired(true).ValueGeneratedOnAdd();
                 entity.Property(e => e.CardId).HasColumnName("card_id").IsRequired(true).HasMaxLength(10);
+                entity.Property(e => e.CardKey).HasColumnName("card_key").IsRequired(true);
                 entity.Property(e => e.Label).HasColumnName("label").IsRequired(true).HasMaxLength(200);
                 entity.Property(e => e.CreatedAt).HasColumnName("created_at").IsRequired(true).HasDefaultValueSql("CURRENT_TIMESTAMP");
             });

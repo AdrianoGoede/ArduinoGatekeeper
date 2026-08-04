@@ -4,6 +4,7 @@ using ArduinoGatekeeperBackend.Mqtt.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
 using ArduinoGatekeeperBackend.Websocket;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using MQTTnet;
 using Newtonsoft.Json;
 
@@ -31,8 +32,8 @@ namespace ArduinoGatekeeperBackend.Mqtt
             using var clientKey = ECDsa.Create();
             clientKey.ImportFromPem(File.ReadAllText(_config.GetValue<string>("Ssl:ServerKey")!));
 
-            _client.ApplicationMessageReceivedAsync += handleIncomingMessageAsync;
-            _client.DisconnectedAsync += handleDesconnectAsync;
+            _client.ApplicationMessageReceivedAsync += HandleIncomingMessageAsync;
+            _client.DisconnectedAsync += HandleDisconnectAsync;
             
             var options = new MqttClientOptionsBuilder()
                 .WithTcpServer(_config.GetValue<string>("MqttBroker:Host"), _config.GetValue<int>("MqttBroker:Port", 8883))
@@ -67,34 +68,48 @@ namespace ArduinoGatekeeperBackend.Mqtt
             _client?.Dispose();
         }
 
-        private async Task handleIncomingMessageAsync(MqttApplicationMessageReceivedEventArgs e)
+        private async Task HandleIncomingMessageAsync(MqttApplicationMessageReceivedEventArgs e)
         {
             var payload = e.ApplicationMessage.ConvertPayloadToString();
             if (string.IsNullOrWhiteSpace(payload)) return;
 
             if (e.ApplicationMessage.Topic.EndsWith("/dev_status"))
-                await handleDeviceStatusMessageAsync(payload);
+                await HandleDeviceStatusMessageAsync(payload);
             else if (e.ApplicationMessage.Topic.EndsWith("/scan"))
-                await handleScanMessageAsync(payload);
+                await HandleScanMessageAsync(payload);
         }
 
-        private async Task handleDeviceStatusMessageAsync(string payload)
+        private async Task HandleDeviceStatusMessageAsync(string payload)
         {
             var status = JsonConvert.DeserializeObject<DeviceStatus>(payload);
             if (status is null) return;
+            var doorId = int.Parse(status.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty));
 
             await using var scope = _scopeFactory.CreateAsyncScope();
             var doorLogsService = scope.ServiceProvider.GetRequiredService<IDoorLogsService>();
             var result = await doorLogsService.CreateAsync(new DoorLogDTO {
-                DoorId = int.Parse(status.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
+                DoorId = doorId,
                 Online = status.Online,
                 CreatedAt = (status.Timestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(status.Timestamp ?? 0).UtcDateTime : null)
             });
 
             await _hubContext.Clients.All.SendAsync("NewStatusEntry", result);
+
+            if (!status.Online) return;
+            var addUserTopic = _config.GetValue<string>("MqttBroker:Topics:AddUser", string.Empty).Replace("+", status.DeviceId).Trim();
+
+            var permissionsService = scope.ServiceProvider.GetRequiredService<IPermissionsService>();
+            var authUsers = permissionsService.GetAll().Include(it => it.User).Where(it => it.DoorId == doorId).Select(it => it.User).Select(usr => new { usr.CardId, usr.CardKey });
+            await authUsers.ForEachAsync(async usr => {
+                await _client.PublishStringAsync(
+                    addUserTopic,
+                    JsonConvert.SerializeObject(new AuthorizedUser { Uid = usr.CardId, Key = usr.CardKey.Select(it => Convert.ToInt32(it)) }),
+                    MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce
+                );
+            });
         }
 
-        private async Task handleScanMessageAsync(string payload)
+        private async Task HandleScanMessageAsync(string payload)
         {
             var scan = JsonConvert.DeserializeObject<Scan>(payload);
             if (scan is null) return;
@@ -111,7 +126,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
             await _hubContext.Clients.All.SendAsync("NewLogEntry", result);
         }
 
-        private async Task handleDesconnectAsync(MqttClientDisconnectedEventArgs e)
+        private async Task HandleDisconnectAsync(MqttClientDisconnectedEventArgs e)
         {
             var delay = _config.GetValue<int>("MqttBroker:ReconnectionDelay", 5);
             Console.WriteLine($"MQTT disconnected, reconnecting in {delay}s...");

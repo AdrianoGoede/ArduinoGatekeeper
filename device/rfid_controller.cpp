@@ -81,9 +81,9 @@ void RfidController::AddUser(const String& payload) {
   deserializeJson(document, payload);
   if (!document.is<JsonObject>()) return;
   
-  String cardId = document["uid"];
+  String cardId = document["Uid"];
   if (cardId.isEmpty()) return;
-  JsonArray keyArray = document["key"];
+  JsonArray keyArray = document["Key"];
   if (keyArray.isNull() || keyArray.size() != MFRC522::MIFARE_Misc::MF_KEY_SIZE) return;
 
   MFRC522::MIFARE_Key key;
@@ -100,7 +100,7 @@ void RfidController::RemoveUser(const String& payload) {
   deserializeJson(document, payload);
   if (!document.is<JsonObject>()) return;
   
-  String cardId = document["uid"];
+  String cardId = document["Uid"];
   if (cardId.isEmpty()) return;
 
   xSemaphoreTake(_authUsersMutex, portMAX_DELAY);
