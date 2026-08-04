@@ -73,22 +73,26 @@ namespace ArduinoGatekeeperBackend.Mqtt
             var payload = e.ApplicationMessage.ConvertPayloadToString();
             if (string.IsNullOrWhiteSpace(payload)) return;
 
+            var deviceIdPrefix = _config.GetValue<string?>("MqttBroker:DeviceIdPrefix");
+            var deviceId = e.ApplicationMessage.Topic.Split('/').FirstOrDefault(it => it.Trim().StartsWith(deviceIdPrefix))?.Trim();
+
             if (e.ApplicationMessage.Topic.EndsWith("/dev_status"))
-                await HandleDeviceStatusMessageAsync(payload);
+                await HandleDeviceStatusMessageAsync(deviceId, payload);
             else if (e.ApplicationMessage.Topic.EndsWith("/scan"))
-                await HandleScanMessageAsync(payload);
+                await HandleScanMessageAsync(deviceId, payload);
         }
 
-        private async Task HandleDeviceStatusMessageAsync(string payload)
+        private async Task HandleDeviceStatusMessageAsync(string? deviceId, string payload)
         {
+            if (string.IsNullOrWhiteSpace(deviceId)) return;
             var status = JsonConvert.DeserializeObject<DeviceStatus>(payload);
             if (status is null) return;
-            var doorId = int.Parse(status.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty));
+            var deviceIdNum = int.Parse(deviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty));
 
             await using var scope = _scopeFactory.CreateAsyncScope();
             var doorLogsService = scope.ServiceProvider.GetRequiredService<IDoorLogsService>();
             var result = await doorLogsService.CreateAsync(new DoorLogDTO {
-                DoorId = doorId,
+                DoorId = deviceIdNum,
                 Online = status.Online,
                 CreatedAt = (status.Timestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(status.Timestamp ?? 0).UtcDateTime : null)
             });
@@ -96,10 +100,10 @@ namespace ArduinoGatekeeperBackend.Mqtt
             await _hubContext.Clients.All.SendAsync("NewStatusEntry", result);
 
             if (!status.Online) return;
-            var addUserTopic = _config.GetValue<string>("MqttBroker:Topics:AddUser", string.Empty).Replace("+", status.DeviceId).Trim();
+            var addUserTopic = _config.GetValue<string>("MqttBroker:Topics:AddUser", string.Empty).Replace("+", deviceId).Trim();
 
             var permissionsService = scope.ServiceProvider.GetRequiredService<IPermissionsService>();
-            var authUsers = permissionsService.GetAll().Include(it => it.User).Where(it => it.DoorId == doorId).Select(it => it.User).Select(usr => new { usr.CardId, usr.CardKey });
+            var authUsers = permissionsService.GetAll().Include(it => it.User).Where(it => it.DoorId == deviceIdNum).Select(it => it.User).Select(usr => new { usr.CardId, usr.CardKey });
             await authUsers.ForEachAsync(async usr => {
                 await _client.PublishStringAsync(
                     addUserTopic,
@@ -109,8 +113,9 @@ namespace ArduinoGatekeeperBackend.Mqtt
             });
         }
 
-        private async Task HandleScanMessageAsync(string payload)
+        private async Task HandleScanMessageAsync(string? deviceId, string payload)
         {
+            if (string.IsNullOrWhiteSpace(deviceId)) return;
             var scan = JsonConvert.DeserializeObject<Scan>(payload);
             if (scan is null) return;
 
@@ -118,7 +123,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
             var accessLogsService = scope.ServiceProvider.GetRequiredService<IAccessLogsService>();
             var result = await accessLogsService.CreateAsync(new AccessLogDTO {
                 CardId = (scan.CardId ?? string.Empty),
-                DoorId = int.Parse(scan.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
+                DoorId = int.Parse(deviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
                 Granted = scan.Granted,
                 CreatedAt = (scan.Timestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(scan.Timestamp ?? 0).UtcDateTime : null)
             });
