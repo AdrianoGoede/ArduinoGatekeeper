@@ -8,10 +8,12 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
     public class PermissionsService : IPermissionsService
     {
         private readonly ArduinoGatekeeperContext _dbContext;
+        private readonly ILogger<IPermissionsService> _logger;
 
-        public PermissionsService(ArduinoGatekeeperContext dbContext)
+        public PermissionsService(ArduinoGatekeeperContext dbContext, ILogger<IPermissionsService> logger)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
         
         public IQueryable<Permission> GetAll() => _dbContext.Permissions.AsNoTracking();
@@ -20,19 +22,35 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
         
         public async Task<Permission> CreateAsync(PermissionDTO door)
         {
-            var newPermission = _dbContext.Permissions.Add(new Permission {
-                UserId = (door.UserId ?? 0),
-                DoorId = (door.DoorId ?? 0)
-            });
-            await _dbContext.SaveChangesAsync();
-            return newPermission.Entity;
+            try
+            {
+                var newPermission = _dbContext.Permissions.Add(new Permission {
+                    UserId = (door.UserId ?? 0),
+                    DoorId = (door.DoorId ?? 0)
+                });
+                await _dbContext.SaveChangesAsync();
+                return newPermission.Entity;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.InnerException?.Message ?? ex.Message);
+                throw;
+            }
         }
 
         public async Task DeleteAsync(int userId, int doorId)
         {
-            var permission = await _dbContext.Permissions.FindAsync(userId, doorId) ?? throw new ArgumentException($"No record found with User ID {userId} and Door ID {doorId}");
-            _dbContext.Permissions.Remove(permission);
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                var permission = await _dbContext.Permissions.FindAsync(userId, doorId) ?? throw new ArgumentException($"No record found with User ID {userId} and Door ID {doorId}");
+                _dbContext.Permissions.Remove(permission);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.InnerException?.Message ?? ex.Message);
+                throw;
+            }
         }
     }
 }

@@ -17,8 +17,14 @@ using ArduinoGatekeeperBackend.Services.Implementations;
 using ArduinoGatekeeperBackend.Mqtt;
 using ArduinoGatekeeperBackend.Websocket;
 using System.Security.Cryptography;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((ctx, config) => {
+    config.ReadFrom.Configuration(ctx.Configuration);
+    config.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}");
+});
 
 // Database
 builder.Services.AddDbContext<ArduinoGatekeeperContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("AgkDatabase")));
