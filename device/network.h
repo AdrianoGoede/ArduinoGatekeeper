@@ -16,11 +16,11 @@ class Network {
     static MqttClient _mqttClient;
     static String _scanTopic;
     static String _deviceStatusStopic;
-    static String _addUserTopic;
-    static String _removeUserTopic;
-    static MqttMessageCallback _addUserCallback, _removeUserCallback;
+    static String _addUsersTopic;
+    static String _removeUsersTopic;
+    static MqttMessageCallback _addUsersCallback, _removeUsersCallback;
     static char _strBuffer[STRING_BUFFER_SIZE];
-    static bool initialize(MqttMessageCallback addUserCallback, MqttMessageCallback removeUserCallback);
+    static bool initialize(MqttMessageCallback addUsersCallback, MqttMessageCallback removeUsersCallback);
     static bool connectWiFi();
     static bool synchronizeClock();
     static bool connectToMqttBroker();
@@ -29,7 +29,7 @@ class Network {
     static String getJsonStatusMessage(bool online, bool addTimestamp);
     static void handleIncomingMessage(int messageSize);
   public:
-    static bool begin(MqttMessageCallback addUserCallback, MqttMessageCallback removeUserCallback);
+    static bool begin(MqttMessageCallback addUsersCallback, MqttMessageCallback removeUsersCallback);
     static bool handleConnections();
     static void sendLogMessage(const String& payload);
 };

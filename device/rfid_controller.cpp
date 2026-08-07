@@ -1,3 +1,5 @@
+#include "ArduinoJson/Variant/JsonVariant.hpp"
+#include "ArduinoJson/Array/JsonArray.hpp"
 #include "MFRC522.h"
 #include "rfid_controller.h"
 #include <ArduinoJson.h>
@@ -76,34 +78,37 @@ void RfidController::generateLogEntry(const String& uid, RfidScanResult result, 
   xQueueSend(_logs, &entry, portMAX_DELAY);
 }
 
-void RfidController::AddUser(const String& payload) {
+void RfidController::AddUsers(const String& payload) {
   JsonDocument document;
   deserializeJson(document, payload);
-  if (!document.is<JsonObject>()) return;
-  
-  String cardId = document["Uid"];
-  if (cardId.isEmpty()) return;
-  JsonArray keyArray = document["Key"];
-  if (keyArray.isNull() || keyArray.size() != MFRC522::MIFARE_Misc::MF_KEY_SIZE) return;
-
-  MFRC522::MIFARE_Key key;
-  for (uint8_t i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
-    key.keyByte[i] = keyArray[i];
+  if (!document.is<JsonArray>()) return;
 
   xSemaphoreTake(_authUsersMutex, portMAX_DELAY);
-  _authorizedUsers[cardId] = key;
+  for (const JsonVariant& user : document.as<JsonArray>()) {
+    String cardId = user["Uid"];
+    if (cardId.isEmpty()) continue;
+    JsonArray keyArray = user["Key"];
+    if (keyArray.isNull() || keyArray.size() != MFRC522::MIFARE_Misc::MF_KEY_SIZE) continue;
+
+    MFRC522::MIFARE_Key key;
+    for (uint8_t i = 0; i < MFRC522::MIFARE_Misc::MF_KEY_SIZE; i++)
+      key.keyByte[i] = keyArray[i];
+    
+    _authorizedUsers[cardId] = key;
+  }
   xSemaphoreGive(_authUsersMutex);
 }
 
-void RfidController::RemoveUser(const String& payload) {
+void RfidController::RemoveUsers(const String& payload) {
   JsonDocument document;
   deserializeJson(document, payload);
-  if (!document.is<JsonObject>()) return;
+  if (!document.is<JsonArray>()) return;
   
-  String cardId = document["Uid"];
-  if (cardId.isEmpty()) return;
-
   xSemaphoreTake(_authUsersMutex, portMAX_DELAY);
-  _authorizedUsers.erase(cardId);
+  for (const JsonVariant& user : document.as<JsonArray>()) {
+    String cardId = document["Uid"];
+    if (cardId.isEmpty()) continue;
+    _authorizedUsers.erase(cardId);
+  }
   xSemaphoreGive(_authUsersMutex);
 }

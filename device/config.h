@@ -39,8 +39,8 @@
 #define MQTT_KEEP_ALIVE_INTERVAL        10000
 #define SCAN_TOPIC                      "AGK/+/scan"
 #define DEVICE_STATUS_TOPIC             "AGK/+/dev_status"
-#define ADD_USER_TOPIC                  "AGK/+/add_user"
-#define REMOVE_USER_TOPIC               "AGK/+/remove_user"
+#define ADD_USERS_TOPIC                 "AGK/+/add_users"
+#define REMOVE_USERS_TOPIC              "AGK/+/remove_users"
 
 // mTLS
 const char CA_CERT[] PROGMEM = R"EOF(

@@ -21,7 +21,7 @@ void setup() {
     while (true) {}
   }
   
-  if (!Network::begin(RfidController::AddUser, RfidController::RemoveUser)) {
+  if (!Network::begin(RfidController::AddUsers, RfidController::RemoveUsers)) {
     Serial.println("Network module setup failed! aborting...");
     while (true) {}
   }

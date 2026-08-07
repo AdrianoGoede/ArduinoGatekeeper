@@ -5,30 +5,30 @@ WiFiClientSecure Network::_wifiClient;
 MqttClient Network::_mqttClient(_wifiClient);
 String Network::_scanTopic;
 String Network::_deviceStatusStopic;
-String Network::_addUserTopic;
-String Network::_removeUserTopic;
-MqttMessageCallback Network::_addUserCallback;
-MqttMessageCallback Network::_removeUserCallback;
+String Network::_addUsersTopic;
+String Network::_removeUsersTopic;
+MqttMessageCallback Network::_addUsersCallback;
+MqttMessageCallback Network::_removeUsersCallback;
 char Network::_strBuffer[STRING_BUFFER_SIZE];
 
-bool Network::begin(MqttMessageCallback addUserCallback, MqttMessageCallback removeUserCallback) {
-  return (initialize(addUserCallback, removeUserCallback) && connectWiFi() && synchronizeClock() && connectToMqttBroker());
+bool Network::begin(MqttMessageCallback addUsersCallback, MqttMessageCallback removeUsersCallback) {
+  return (initialize(addUsersCallback, removeUsersCallback) && connectWiFi() && synchronizeClock() && connectToMqttBroker());
 }
 
-bool Network::initialize(MqttMessageCallback addUserCallback, MqttMessageCallback removeUserCallback) {
+bool Network::initialize(MqttMessageCallback addUsersCallback, MqttMessageCallback removeUsersCallback) {
   Serial.print("Initializing...");
 
-  _addUserCallback = addUserCallback;
-  _removeUserCallback = removeUserCallback;
+  _addUsersCallback = addUsersCallback;
+  _removeUsersCallback = removeUsersCallback;
   
   _scanTopic = String(SCAN_TOPIC);
   _scanTopic.replace("+", MQTT_DEVICE_ID);
   _deviceStatusStopic = String(DEVICE_STATUS_TOPIC);
   _deviceStatusStopic.replace("+", MQTT_DEVICE_ID);
-  _addUserTopic = String(ADD_USER_TOPIC);
-  _addUserTopic.replace("+", MQTT_DEVICE_ID);
-  _removeUserTopic = String(REMOVE_USER_TOPIC);
-  _removeUserTopic.replace("+", MQTT_DEVICE_ID);
+  _addUsersTopic = String(ADD_USERS_TOPIC);
+  _addUsersTopic.replace("+", MQTT_DEVICE_ID);
+  _removeUsersTopic = String(REMOVE_USERS_TOPIC);
+  _removeUsersTopic.replace("+", MQTT_DEVICE_ID);
 
   _wifiClient.setCACert(CA_CERT);
   _wifiClient.setCertificate(CLIENT_CERT);
@@ -96,8 +96,8 @@ bool Network::connectToMqttBroker() {
     return false;
   }
 
-  _mqttClient.subscribe(_addUserTopic, MQTT_QOS_LEVEL);
-  _mqttClient.subscribe(_removeUserTopic, MQTT_QOS_LEVEL);
+  _mqttClient.subscribe(_addUsersTopic, MQTT_QOS_LEVEL);
+  _mqttClient.subscribe(_removeUsersTopic, MQTT_QOS_LEVEL);
   publishMessage(_deviceStatusStopic, getJsonStatusMessage(true, true));
 
   Serial.println("Success!");
@@ -136,10 +136,10 @@ void Network::handleIncomingMessage(int messageSize) {
   String topic = _mqttClient.messageTopic();
   String payload = _mqttClient.readString();
 
-  if (topic == _addUserTopic)
-    _addUserCallback(payload);
-  else if (topic == _removeUserTopic)
-    _removeUserCallback(payload);
+  if (topic == _addUsersTopic)
+    _addUsersCallback(payload);
+  else if (topic == _removeUsersTopic)
+    _removeUsersCallback(payload);
 }
 
 bool Network::handleConnections() {

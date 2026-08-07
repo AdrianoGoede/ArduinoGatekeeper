@@ -79,13 +79,13 @@ namespace ArduinoGatekeeperBackend.Mqtt
             {
                 _logger.LogInformation("Connected successfuly");
             
-                string topic = _config.GetValue<string>("MqttBroker:Topics:DeviceStatus")?.Trim() ?? throw new ArgumentNullException("DeviceStatus topic not found");
+                string topic = _config.GetValue<string>("MqttBroker:Topics:DeviceStatus")?.Trim() ?? throw new ArgumentNullException("DeviceStatus topic not informed");
                 await _client.SubscribeAsync(new MqttTopicFilterBuilder()
                     .WithTopic(topic).WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce)
                     .Build());
                 _logger.LogInformation("Subscribed to topic '{Topic}'", topic);
 
-                topic = _config.GetValue<string>("MqttBroker:Topics:Scan")?.Trim() ?? throw new ArgumentNullException("Scan topic not found");
+                topic = _config.GetValue<string>("MqttBroker:Topics:Scan")?.Trim() ?? throw new ArgumentNullException("Scan topic not informed");
                 await _client.SubscribeAsync(new MqttTopicFilterBuilder()
                     .WithTopic(topic).WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce)
                     .Build());
@@ -147,17 +147,17 @@ namespace ArduinoGatekeeperBackend.Mqtt
                 await _hubContext.Clients.All.SendAsync("NewStatusEntry", result);
 
                 if (!status.Online) return;
-                var addUserTopic = _config.GetValue<string>("MqttBroker:Topics:AddUser", string.Empty).Replace("+", deviceId).Trim();
+                var addUsersTopic = _config.GetValue<string>("MqttBroker:Topics:AddUsers")?.Replace("+", deviceId)?.Trim() ?? throw new ArgumentNullException("AddUsers topic not informed");
+                var pageSize = _config.GetValue<int?>("MqttBroker:AddUsersPageSize") ?? throw new ArgumentNullException("AddUsersPageSize not informed");
 
                 var permissionsService = scope.ServiceProvider.GetRequiredService<IPermissionsService>();
-                var authUsers = permissionsService.GetAll().Include(it => it.User).Where(it => it.DoorId == deviceIdNum).Select(it => it.User).Select(usr => new { usr.CardId, usr.CardKey });
-                await authUsers.ForEachAsync(async usr => {
+                var authUsers = await permissionsService.GetAll().Include(it => it.User).Where(it => it.DoorId == deviceIdNum).Select(it => it.User).Select(usr => new { usr.CardId, usr.CardKey }).ToArrayAsync();
+                foreach (var page in authUsers.Chunk(pageSize))
                     await _client.PublishStringAsync(
-                        addUserTopic,
-                        JsonConvert.SerializeObject(new AuthorizedUser { Uid = usr.CardId, Key = usr.CardKey.Select(it => Convert.ToInt32(it)) }),
+                        addUsersTopic,
+                        JsonConvert.SerializeObject(page.Select(it => new AuthorizedUser { Uid = it.CardId, Key = it.CardKey.Select(it => Convert.ToInt32(it)) })),
                         MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce
                     );
-                });
             }
             catch (Exception ex) { _logger.LogError(ex.InnerException?.Message ?? ex.Message); }
         }
