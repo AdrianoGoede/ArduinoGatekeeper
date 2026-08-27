@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  database:
+    image: agk_database
+    build: ./database
+    container_name: agk_database
+    env_file:
+      - ./database/database.env
+  mqtt_broker:
+    image: agk_mqtt_broker
+    build: ./mqtt_broker
+    container_name: agk_mqtt_broker
+    ports:
+      - 8883:8883
+  backend:
+    image: agk_backend
+    build: ./backend
+    container_name: agk_backend
+    ports:
+      - 443:443
+    depends_on:
+      - database
+      - mqtt_broker
