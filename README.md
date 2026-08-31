@@ -72,7 +72,7 @@ All certificates are ECC P-256, issued by a self-hosted CA. The CA private key a
 |---|---|---|
 | `AGK/{id}/dev_status`   | Door client -> Backend |
 | `AGK/{id}/scan`         | Door client -> Backend |
-| `AGK/{id}/add_user`     | Backend -> Door client |
+| `AGK/{id}/add_users`    | Backend -> Door client |
 | `AGK/{id}/remove_users` | Door client -> Backend |
 
 Door clients publish `dev_status` on connect and disconnect, and `scan` on every card read. On receiving a `dev_status` online event, the backend pushes the authorized user list to the door in paginated chunks via `add_user`. Doors can also request a fresh user list at any time via `req_users`, with a timeout-based retry if chunks are not fully received.
