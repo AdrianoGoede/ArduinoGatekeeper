@@ -34,3 +34,11 @@ openssl ecparam -name prime256v1 -genkey -noout -out device.key;
 openssl req -new -key device.key -out device.csr -subj "/CN=agk_door_1";
 openssl x509 -req -days 3650 -in device.csr -CA ../../ssl_root/ca.crt -CAkey ../../ssl_root/ca.key -CAcreateserial -out device.crt;
 cp ../../ssl_root/ca.crt ca.crt && rm device.csr && cd ..;
+
+#Generate Admin cert
+cd ../admin;
+mkdir ssl && cd ssl;
+openssl ecparam -name prime256v1 -genkey -noout -out admin.key;
+openssl req -new -key admin.key -out admin.csr -subj "/CN=agk_admin_1";
+openssl x509 -req -days 3650 -in admin.csr -CA ../../ssl_root/ca.crt -CAkey ../../ssl_root/ca.key -CAcreateserial -out admin.crt;
+cp ../../ssl_root/ca.crt ca.crt && rm admin.csr && cd ..;
