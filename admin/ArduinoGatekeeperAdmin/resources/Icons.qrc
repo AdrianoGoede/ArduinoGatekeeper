@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/user.svg</file>
+        <file>icons/users.svg</file>
+        <file>icons/cpu.svg</file>
+        <file>icons/pie-chart.svg</file>
+        <file>icons/info.svg</file>
+    </qresource>
+</RCC>
