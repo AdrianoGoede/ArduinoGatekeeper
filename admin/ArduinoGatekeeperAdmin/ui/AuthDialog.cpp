@@ -21,6 +21,12 @@ void AuthDialog::selectClientKey() { selectFile(ui->leClientKey, "Certificate Ke
 
 void AuthDialog::accept()
 {
+    QString baseUrl = ui->leBaseUrl->text();
+    if (baseUrl.isEmpty()) {
+        QMessageBox::critical(this, "Error", "Base URL must be informed!", QMessageBox::StandardButton::Ok);
+        return;
+    }
+
     QString caCert = ui->leCaCert->text();
     if (caCert.isEmpty()) {
         QMessageBox::critical(this, "Error", "CA Cert must be informed!", QMessageBox::StandardButton::Ok);
@@ -39,7 +45,7 @@ void AuthDialog::accept()
         return;
     }
 
-    authenticationRequested(caCert, clientCert, clientKey);
+    authenticationRequested(baseUrl, caCert, clientCert, clientKey);
     QDialog::accept();
 }
 

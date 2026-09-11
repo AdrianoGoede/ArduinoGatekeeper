@@ -5,5 +5,10 @@
         <file>icons/cpu.svg</file>
         <file>icons/pie-chart.svg</file>
         <file>icons/info.svg</file>
+        <file>icons/edit.svg</file>
+        <file>icons/user-plus.svg</file>
+        <file>icons/user-minus.svg</file>
+        <file>icons/refresh-cw.svg</file>
+        <file>icons/folder.svg</file>
     </qresource>
 </RCC>

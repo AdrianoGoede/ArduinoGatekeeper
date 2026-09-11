@@ -9,6 +9,8 @@
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    _baseUrl = std::make_unique<QString>();
+    _sslConfiguration = std::make_unique<QSslConfiguration>(QSslConfiguration::defaultConfiguration());
 
     _authDialog = new AuthDialog(this);
     connect(_authDialog, &AuthDialog::authenticationRequested, this, &MainWindow::authenticate);
@@ -17,7 +19,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     _dashboardDialog = new DashboardDialog(_sslConfiguration.get(), this);
     connect(ui->pbDashboard, &QAbstractButton::clicked, this, &MainWindow::openDashboardDialog);
 
-    _usersDialog = new UsersDialog(_sslConfiguration.get(), this);
+    _usersDialog = new UsersDialog(_baseUrl.get(), _sslConfiguration.get(), this);
     connect(ui->pbUsers, &QAbstractButton::clicked, this, &MainWindow::openUsersDialog);
 
     _doorsDialog = new DoorsDialog(_sslConfiguration.get(), this);
@@ -34,7 +36,7 @@ void MainWindow::openUsersDialog() { if (_usersDialog) _usersDialog->show(); }
 
 void MainWindow::openDoorsDialog() { if (_doorsDialog) _doorsDialog->show(); }
 
-void MainWindow::authenticate(const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath)
+void MainWindow::authenticate(const QString& baseUrl, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath)
 {
     QFile caFile(caCertPath);
     QFile clientCertFile(clientCertPath);
@@ -55,13 +57,13 @@ void MainWindow::authenticate(const QString& caCertPath, const QString& clientCe
         QSslKey clientKey(&clientKeyFile, QSsl::KeyAlgorithm::Ec, QSsl::EncodingFormat::Pem);
         if (clientKey.isNull()) throw std::runtime_error("TLS client key file corrupted or invalid");
 
-        _sslConfiguration = std::make_unique<QSslConfiguration>(QSslConfiguration::defaultConfiguration());
         _sslConfiguration->setCaCertificates(caCerts);
         _sslConfiguration->setLocalCertificate(clientCert);
         _sslConfiguration->setPrivateKey(clientKey);
         _sslConfiguration->setPeerVerifyMode(QSslSocket::PeerVerifyMode::VerifyPeer);
         _sslConfiguration->setProtocol(QSsl::TlsV1_3OrLater);
 
+        *_baseUrl = baseUrl;
         ui->pbDashboard->setEnabled(true);
         ui->pbUsers->setEnabled(true);
         ui->pbDoors->setEnabled(true);
@@ -79,6 +81,7 @@ void MainWindow::authenticate(const QString& caCertPath, const QString& clientCe
 
 void MainWindow::deauthenticate()
 {
+    _baseUrl.reset(nullptr);
     _sslConfiguration.reset(nullptr);
     ui->pbDashboard->setEnabled(false);
     ui->pbUsers->setEnabled(false);

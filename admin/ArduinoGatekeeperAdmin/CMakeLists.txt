@@ -23,6 +23,8 @@ qt_add_executable(ArduinoGatekeeperAdmin
     ui/DashboardDialog.h
     ui/DashboardDialog.cpp
     ui/DashboardDialog.ui
+    core/ODataClient.h
+    core/ODataClient.cpp
     resources/Icons.qrc
 )
 
@@ -44,4 +46,21 @@ qt_generate_deploy_app_script(
     OUTPUT_SCRIPT deploy_script
     NO_UNSUPPORTED_PLATFORM_ERROR
 )
+
+qt_add_resources(ArduinoGatekeeperAdmin "Icons"
+    PREFIX "/"
+    BASE "resources"
+    FILES
+        resources/icons/user.svg
+        resources/icons/users.svg
+        resources/icons/cpu.svg
+        resources/icons/pie-chart.svg
+        resources/icons/info.svg
+        resources/icons/edit.svg
+        resources/icons/user-plus.svg
+        resources/icons/user-minus.svg
+        resources/icons/refresh-cw.svg
+        resources/icons/folder.svg
+)
+
 install(SCRIPT ${deploy_script})

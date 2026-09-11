@@ -25,11 +25,12 @@ private slots:
     void openDashboardDialog();
     void openUsersDialog();
     void openDoorsDialog();
-    void authenticate(const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath);
+    void authenticate(const QString& baseUrl, const QString& caCertPath, const QString& clientCertPath, const QString& clientKeyPath);
     void deauthenticate();
 
 private:
     Ui::MainWindow* ui;
+    std::unique_ptr<QString> _baseUrl = nullptr;
     std::unique_ptr<QSslConfiguration> _sslConfiguration = nullptr;
     AuthDialog* _authDialog = nullptr;
     DashboardDialog* _dashboardDialog = nullptr;

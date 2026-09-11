@@ -15,7 +15,7 @@ public:
     ~AuthDialog();
 
 signals:
-    void authenticationRequested(QString caCert, QString clientCert, QString clientKey);
+    void authenticationRequested(QString baseUrl, QString caCert, QString clientCert, QString clientKey);
 
 private slots:
     void selectCaCert();
