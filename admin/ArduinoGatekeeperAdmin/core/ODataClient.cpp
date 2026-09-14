@@ -1,12 +1,11 @@
 #include "ODataClient.h"
 #include <QUrl>
-#include <QUrlQuery>
 #include <QNetworkRequest>
 #include <QJsonDocument>
 
 ODataClient::ODataClient(const QString* baseUrl, const QSslConfiguration* sslConfig, QObject* parent) : QObject(parent), _baseUrl(baseUrl), _sslConfig(sslConfig), _manager(new QNetworkAccessManager(this)) {}
 
-void ODataClient::getRequest(const QString& entity, const QMap<QString, QString>& params)
+void ODataClient::getRequest(const QString& entity, const QMap<QString, QString>& params) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
         requestFailed("Base URL is not set");
@@ -14,17 +13,41 @@ void ODataClient::getRequest(const QString& entity, const QMap<QString, QString>
         requestFailed("SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2").arg(*_baseUrl, entity));
-        QUrlQuery query;
-        for (auto it = params.constBegin(); it != params.constEnd(); it++)
-            query.addQueryItem(it.key(), it.value());
-        url.setQuery(query);
-
+        url.setQuery(getQuery(params));
         QNetworkReply* reply = sendRequest(url, "GET");
         connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::GET); });
     }
 }
 
-void ODataClient::postRequest(const QString& entity, const QJsonObject& body)
+void ODataClient::getRequest(const QString& entity, int key, const QMap<QString, QString>& params) const
+{
+    if (!_baseUrl || _baseUrl->isEmpty())
+        requestFailed("Base URL is not set");
+    else if (!_sslConfig || _sslConfig->isNull())
+        requestFailed("SSL configuration not set");
+    else {
+        QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity).arg(key));
+        url.setQuery(getQuery(params));
+        QNetworkReply* reply = sendRequest(url, "GET");
+        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::GET); });
+    }
+}
+
+void ODataClient::getRequest(const QString& entity, const QMap<QString, int>& key, const QMap<QString, QString>& params) const
+{
+    if (!_baseUrl || _baseUrl->isEmpty())
+        requestFailed("Base URL is not set");
+    else if (!_sslConfig || _sslConfig->isNull())
+        requestFailed("SSL configuration not set");
+    else {
+        QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity, getKeyString(key)));
+        url.setQuery(getQuery(params));
+        QNetworkReply* reply = sendRequest(url, "GET");
+        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::GET); });
+    }
+}
+
+void ODataClient::postRequest(const QString& entity, const QJsonObject& body) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
         requestFailed("Base URL is not set");
@@ -37,7 +60,7 @@ void ODataClient::postRequest(const QString& entity, const QJsonObject& body)
     }
 }
 
-void ODataClient::patchRequest(const QString& entity, int key, const QJsonObject& body)
+void ODataClient::patchRequest(const QString& entity, int key, const QJsonObject& body) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
         requestFailed("Base URL is not set");
@@ -50,25 +73,20 @@ void ODataClient::patchRequest(const QString& entity, int key, const QJsonObject
     }
 }
 
-void ODataClient::patchRequest(const QString& entity, const QMap<QString, int>& key, const QJsonObject& body)
+void ODataClient::patchRequest(const QString& entity, const QMap<QString, int>& key, const QJsonObject& body) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
         requestFailed("Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
         requestFailed("SSL configuration not set");
     else {
-        QString keyString;
-        for (auto it = key.constBegin(); it != key.constEnd(); it++)
-            keyString += QString("%1=%2,").arg(it.key(), it.value());
-        keyString.removeLast();
-
-        QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity, keyString));
+        QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity, getKeyString(key)));
         QNetworkReply* reply = sendRequest(url, "PATCH", body);
         connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::PATCH); });
     }
 }
 
-void ODataClient::deleteRequest(const QString& entity, int key)
+void ODataClient::deleteRequest(const QString& entity, int key) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
         requestFailed("Base URL is not set");
@@ -81,25 +99,20 @@ void ODataClient::deleteRequest(const QString& entity, int key)
     }
 }
 
-void ODataClient::deleteRequest(const QString &entity, const QMap<QString, int> &key)
+void ODataClient::deleteRequest(const QString& entity, const QMap<QString, int>& key) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
         requestFailed("Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
         requestFailed("SSL configuration not set");
     else {
-        QString keyString;
-        for (auto it = key.constBegin(); it != key.constEnd(); it++)
-            keyString += QString("%1=%2,").arg(it.key()).arg(it.value());
-        keyString.removeLast();
-
-        QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl).arg(entity).arg(keyString));
+        QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity, getKeyString(key)));
         QNetworkReply* reply = sendRequest(url, "DELETE");
         connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::DELETE); });
     }
 }
 
-void ODataClient::handleReply(QNetworkReply* reply, HttpMethod method)
+void ODataClient::handleReply(QNetworkReply* reply, HttpMethod method) const
 {
     reply->deleteLater();
 
@@ -130,7 +143,7 @@ void ODataClient::handleReply(QNetworkReply* reply, HttpMethod method)
     }
 }
 
-QNetworkReply* ODataClient::sendRequest(const QUrl& url, const QByteArray& method, const QJsonObject& body)
+QNetworkReply* ODataClient::sendRequest(const QUrl& url, const QByteArray& method, const QJsonObject& body) const
 {
     QNetworkRequest request(url);
     request.setSslConfiguration(*_sslConfig);
@@ -141,4 +154,21 @@ QNetworkReply* ODataClient::sendRequest(const QUrl& url, const QByteArray& metho
     }
     else
         return _manager->sendCustomRequest(request, method);
+}
+
+QString ODataClient::getKeyString(const QMap<QString, int>& key) const
+{
+    QString result;
+    for (auto it = key.constBegin(); it != key.constEnd(); it++)
+        result += QString("%1=%2,").arg(it.key(), it.value());
+    result.removeLast();
+    return result;
+}
+
+QUrlQuery ODataClient::getQuery(const QMap<QString, QString>& params) const
+{
+    QUrlQuery query;
+    for (auto it = params.constBegin(); it != params.constEnd(); it++)
+        query.addQueryItem(it.key(), it.value());
+    return query;
 }
