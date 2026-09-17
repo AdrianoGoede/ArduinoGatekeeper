@@ -11,10 +11,10 @@ namespace ArduinoGatekeeperBackend.EntityFramework.Models
 
         public DateTime CreatedAt { get; set; }
 
-        public IEnumerable<Permission> Permissions { get; set; }
+        public ICollection<Permission> Permissions { get; set; } = new List<Permission>();
 
-        public IEnumerable<AccessLog> AccessLogs { get; set; }
+        public ICollection<AccessLog> AccessLogs { get; set; } = new List<AccessLog>();
 
-        public IEnumerable<DoorLog> DoorLogs { get; set; }
+        public ICollection<DoorLog> DoorLogs { get; set; } = new List<DoorLog>();
     }
 }

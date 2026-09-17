@@ -26,7 +26,9 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             {
                 var newUser = _dbContext.Users.Add(new User {
                     Label = user.Label?.Trim(),
-                    CardId = user.CardId?.Trim()
+                    CardId = user.CardId?.Trim(),
+                    CardKey = Convert.FromBase64String(user.CardKey ?? string.Empty),
+                    Permissions = (user.AllowedDoors ?? []).Select(doorId => new Permission { DoorId = doorId }).ToArray()
                 });
                 await _dbContext.SaveChangesAsync();
                 return newUser.Entity;
@@ -42,9 +44,20 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
         {
             try
             {
-                var existing = await _dbContext.Users.SingleOrDefaultAsync(it => it.Id == id) ?? throw new ArgumentException($"No record found with ID {id}");
-                existing.CardId = (modified.CardId ?? existing.CardId);
+                var existing = await _dbContext.Users.Include(it => it.Permissions).SingleOrDefaultAsync(it => it.Id == id) ?? throw new ArgumentException($"No record found with ID {id}");
                 existing.Label = (modified.Label ?? existing.Label);
+                existing.CardId = (modified.CardId ?? existing.CardId);
+                existing.CardKey = (!string.IsNullOrWhiteSpace(modified.CardKey) ? Convert.FromBase64String(modified.CardKey) : existing.CardKey);
+
+                var newPermissions = (modified.AllowedDoors ?? []).ToHashSet();
+                var permissionsToRemove = existing.Permissions.Where(it => !newPermissions.Contains(it.DoorId)).ToArray();
+                foreach (var permission in permissionsToRemove)
+                    existing.Permissions.Remove(permission);
+
+                var permissionsToAdd = newPermissions.Except(existing.Permissions.Select(it => it.DoorId)).ToArray();
+                foreach (var doorId in permissionsToAdd)
+                    existing.Permissions.Add(new Permission { DoorId = doorId });
+
                 await _dbContext.SaveChangesAsync();
                 return existing;
             }

@@ -14,7 +14,9 @@ namespace ArduinoGatekeeperBackend.Services.Interfaces
     public record UserDTO
     {
         public int? Id { get; set; }
-        public string? CardId { get; set; }
         public string? Label { get; set; }
+        public string? CardId { get; set; }
+        public string? CardKey { get; set; }
+        public IEnumerable<int>? AllowedDoors { get; set; }
     }
 }
