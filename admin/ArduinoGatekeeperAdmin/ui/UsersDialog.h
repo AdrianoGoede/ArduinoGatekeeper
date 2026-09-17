@@ -2,18 +2,13 @@
 #define USERSDIALOG_H
 
 #include <QDialog>
+#include <QList>
 #include <QJsonArray>
 #include <QSslConfiguration>
+#include "UserManagementDialog.h"
 #include "../core/ODataClient.h"
 
 namespace Ui { class UsersDialog; }
-
-enum TableColumnNames {
-    UserId,
-    Label,
-    CreatedAt,
-    ColumnCount
-};
 
 class UsersDialog : public QDialog
 {
@@ -27,16 +22,25 @@ protected:
     void showEvent(QShowEvent* event) override;
 
 private slots:
-    void fetchUsers();
-    void getCollectionRequestFinished(const QJsonArray& results);
-    void requestFailed(const QString& message);
+    void fetchData();
+    void createUser();
+    void editUser();
+    void handleUserDataToEdit(const QString& entity, const QJsonObject& result);
+    void handleCollectionRequestResult(const QString& entity, const QJsonArray& results);
+    void handleUserCreationResult(const QString& entity, const QJsonObject& result);
+    void handleUserEditResult(const QString& entity, const QJsonObject& result);
+    void requestFailed(const QString& entity, const QString& message);
     void handleRowSelectionChange();
 
 private:
     Ui::UsersDialog* ui;
     ODataClient* _odataClient = nullptr;
+    QList<DoorData> _doorData;
     void prepareTable();
     void toggleDialogEnabled();
+    void fetchUserToEdit(int id);
+    void handleUsersList(const QJsonArray& results);
+    void handleDoorsList(const QJsonArray& results);
 };
 
 #endif // USERSDIALOG_H

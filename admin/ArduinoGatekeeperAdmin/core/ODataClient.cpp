@@ -8,123 +8,123 @@ ODataClient::ODataClient(const QString* baseUrl, const QSslConfiguration* sslCon
 void ODataClient::getRequest(const QString& entity, const QMap<QString, QString>& params) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
-        requestFailed("Base URL is not set");
+        requestFailed(entity, "Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
-        requestFailed("SSL configuration not set");
+        requestFailed(entity, "SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2").arg(*_baseUrl, entity));
         url.setQuery(getQuery(params));
         QNetworkReply* reply = sendRequest(url, "GET");
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::GET); });
+        connect(reply, &QNetworkReply::finished, this, [this, entity, reply]() { handleReply(entity, reply, HttpMethod::GET); });
     }
 }
 
 void ODataClient::getRequest(const QString& entity, int key, const QMap<QString, QString>& params) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
-        requestFailed("Base URL is not set");
+        requestFailed(entity, "Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
-        requestFailed("SSL configuration not set");
+        requestFailed(entity, "SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity).arg(key));
         url.setQuery(getQuery(params));
         QNetworkReply* reply = sendRequest(url, "GET");
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::GET); });
+        connect(reply, &QNetworkReply::finished, this, [this, entity, reply]() { handleReply(entity, reply, HttpMethod::GET); });
     }
 }
 
 void ODataClient::getRequest(const QString& entity, const QMap<QString, int>& key, const QMap<QString, QString>& params) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
-        requestFailed("Base URL is not set");
+        requestFailed(entity, "Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
-        requestFailed("SSL configuration not set");
+        requestFailed(entity, "SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity, getKeyString(key)));
         url.setQuery(getQuery(params));
         QNetworkReply* reply = sendRequest(url, "GET");
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::GET); });
+        connect(reply, &QNetworkReply::finished, this, [this, entity, reply]() { handleReply(entity, reply, HttpMethod::GET); });
     }
 }
 
 void ODataClient::postRequest(const QString& entity, const QJsonObject& body) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
-        requestFailed("Base URL is not set");
+        requestFailed(entity, "Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
-        requestFailed("SSL configuration not set");
+        requestFailed(entity, "SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2").arg(*_baseUrl, entity));
         QNetworkReply* reply = sendRequest(url, "POST", body);
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::POST); });
+        connect(reply, &QNetworkReply::finished, this, [this, entity, reply]() { handleReply(entity, reply, HttpMethod::POST); });
     }
 }
 
 void ODataClient::patchRequest(const QString& entity, int key, const QJsonObject& body) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
-        requestFailed("Base URL is not set");
+        requestFailed(entity, "Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
-        requestFailed("SSL configuration not set");
+        requestFailed(entity, "SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity).arg(key));
         QNetworkReply* reply = sendRequest(url, "PATCH", body);
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::PATCH); });
+        connect(reply, &QNetworkReply::finished, this, [this, entity, reply]() { handleReply(entity, reply, HttpMethod::PATCH); });
     }
 }
 
 void ODataClient::patchRequest(const QString& entity, const QMap<QString, int>& key, const QJsonObject& body) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
-        requestFailed("Base URL is not set");
+        requestFailed(entity, "Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
-        requestFailed("SSL configuration not set");
+        requestFailed(entity, "SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity, getKeyString(key)));
         QNetworkReply* reply = sendRequest(url, "PATCH", body);
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::PATCH); });
+        connect(reply, &QNetworkReply::finished, this, [this, entity, reply]() { handleReply(entity, reply, HttpMethod::PATCH); });
     }
 }
 
 void ODataClient::deleteRequest(const QString& entity, int key) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
-        requestFailed("Base URL is not set");
+        requestFailed(entity, "Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
-        requestFailed("SSL configuration not set");
+        requestFailed(entity, "SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity).arg(key));
         QNetworkReply* reply = sendRequest(url, "DELETE");
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::DELETE); });
+        connect(reply, &QNetworkReply::finished, this, [this, entity, reply]() { handleReply(entity, reply, HttpMethod::DELETE); });
     }
 }
 
 void ODataClient::deleteRequest(const QString& entity, const QMap<QString, int>& key) const
 {
     if (!_baseUrl || _baseUrl->isEmpty())
-        requestFailed("Base URL is not set");
+        requestFailed(entity, "Base URL is not set");
     else if (!_sslConfig || _sslConfig->isNull())
-        requestFailed("SSL configuration not set");
+        requestFailed(entity, "SSL configuration not set");
     else {
         QUrl url(QString("https://%1/api/%2(%3)").arg(*_baseUrl, entity, getKeyString(key)));
         QNetworkReply* reply = sendRequest(url, "DELETE");
-        connect(reply, &QNetworkReply::finished, this, [this, reply]() { handleReply(reply, HttpMethod::DELETE); });
+        connect(reply, &QNetworkReply::finished, this, [this, entity, reply]() { handleReply(entity, reply, HttpMethod::DELETE); });
     }
 }
 
-void ODataClient::handleReply(QNetworkReply* reply, HttpMethod method) const
+void ODataClient::handleReply(const QString& entity, QNetworkReply* reply, HttpMethod method) const
 {
     reply->deleteLater();
 
     if (reply->error() != QNetworkReply::NetworkError::NoError) {
-        requestFailed(reply->errorString());
+        requestFailed(entity, reply->errorString());
         return;
     }
 
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &error);
     if (error.error != QJsonParseError::ParseError::NoError) {
-        requestFailed(error.errorString());
+        requestFailed(entity, error.errorString());
         return;
     }
 
@@ -132,14 +132,14 @@ void ODataClient::handleReply(QNetworkReply* reply, HttpMethod method) const
     switch (method) {
         case GET: {
             if (root.contains("value"))
-                getCollectionRequestFinished(root["value"].toArray());
+                getCollectionRequestFinished(entity, root["value"].toArray());
             else
-                getRequestFinished(root);
+                getRequestFinished(entity, root);
         }; break;
-        case POST: postRequestFinished(root); break;
-        case PATCH: patchRequestFinished(root); break;
-        case DELETE: deleteRequestFinished(); break;
-        default: requestFailed("Unexpected response format"); break;
+        case POST: postRequestFinished(entity, root); break;
+        case PATCH: patchRequestFinished(entity, root); break;
+        case DELETE: deleteRequestFinished(entity); break;
+        default: requestFailed(entity, "Unexpected response format"); break;
     }
 }
 

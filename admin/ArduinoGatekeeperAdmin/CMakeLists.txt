@@ -23,6 +23,9 @@ qt_add_executable(ArduinoGatekeeperAdmin
     ui/DashboardDialog.h
     ui/DashboardDialog.cpp
     ui/DashboardDialog.ui
+    ui/UserManagementDialog.h
+    ui/UserManagementDialog.cpp
+    ui/UserManagementDialog.ui
     core/ODataClient.h
     core/ODataClient.cpp
     resources/Icons.qrc

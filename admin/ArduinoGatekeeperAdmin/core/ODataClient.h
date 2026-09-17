@@ -26,14 +26,14 @@ public:
     void deleteRequest(const QString& entity, int key) const;
     void deleteRequest(const QString& entity, const QMap<QString, int>& key) const;
 signals:
-    void getRequestFinished(QJsonObject result) const;
-    void getCollectionRequestFinished(QJsonArray results) const;
-    void postRequestFinished(QJsonObject result) const;
-    void patchRequestFinished(QJsonObject result) const;
-    void deleteRequestFinished() const;
-    void requestFailed(QString error) const;
+    void getRequestFinished(QString entity, QJsonObject result) const;
+    void getCollectionRequestFinished(QString entity, QJsonArray results) const;
+    void postRequestFinished(QString entity, QJsonObject result) const;
+    void patchRequestFinished(QString entity, QJsonObject result) const;
+    void deleteRequestFinished(QString entity) const;
+    void requestFailed(QString entity, QString error) const;
 private slots:
-    void handleReply(QNetworkReply* reply, HttpMethod method) const;
+    void handleReply(const QString& entity, QNetworkReply* reply, HttpMethod method) const;
 private:
     const QString* _baseUrl;
     const QSslConfiguration* _sslConfig;
