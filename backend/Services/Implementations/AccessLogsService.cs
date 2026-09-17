@@ -18,7 +18,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
         
         public IQueryable<AccessLog> GetAll() => _dbContext.AccessLogs.AsNoTracking();
 
-        public async Task<AccessLog?> GetByIdAsync(long id) => await _dbContext.AccessLogs.AsNoTracking().SingleOrDefaultAsync(it => it.Id == id);
+        public IQueryable<AccessLog> GetByIdAsync(long id) => _dbContext.AccessLogs.AsNoTracking().Where(it => it.Id == id);
         
         public async Task<AccessLog> CreateAsync(AccessLogDTO log)
         {

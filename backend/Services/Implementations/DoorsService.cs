@@ -18,7 +18,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
         
         public IQueryable<Door> GetAll() => _dbContext.Doors.AsNoTracking();
 
-        public async Task<Door?> GetByIdAsync(int id) => await _dbContext.Doors.AsNoTracking().SingleOrDefaultAsync(it => it.Id == id);
+        public IQueryable<Door> GetByIdAsync(int id) => _dbContext.Doors.AsNoTracking().Where(it => it.Id == id);
         
         public async Task<Door> CreateAsync(DoorDTO door)
         {

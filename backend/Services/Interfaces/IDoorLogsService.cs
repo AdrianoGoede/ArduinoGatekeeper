@@ -5,7 +5,7 @@ namespace ArduinoGatekeeperBackend.Services.Interfaces
     public interface IDoorLogsService
     {
         public IQueryable<DoorLog> GetAll();
-        public Task<DoorLog?> GetByIdAsync(long id);
+        public IQueryable<DoorLog> GetByIdAsync(long id);
         public Task<DoorLog> CreateAsync(DoorLogDTO log);
     }
 

@@ -18,7 +18,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
         
         public IQueryable<User> GetAll() => _dbContext.Users.AsNoTracking();
 
-        public async Task<User?> GetByIdAsync(int id) => await _dbContext.Users.AsNoTracking().SingleOrDefaultAsync(it => it.Id == id);
+        public IQueryable<User> GetByIdAsync(int id) => _dbContext.Users.AsNoTracking().Where(it => it.Id == id);
         
         public async Task<User> CreateAsync(UserDTO user)
         {

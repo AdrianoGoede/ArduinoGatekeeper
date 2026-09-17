@@ -18,7 +18,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
         
         public IQueryable<Permission> GetAll() => _dbContext.Permissions.AsNoTracking();
 
-        public async Task<Permission?> GetByUserAndDoorIdAsync(int userId, int doorId) => await _dbContext.Permissions.AsNoTracking().SingleOrDefaultAsync(it => it.UserId == userId && it.DoorId == doorId);
+        public IQueryable<Permission> GetByUserAndDoorIdAsync(int userId, int doorId) => _dbContext.Permissions.AsNoTracking().Where(it => it.UserId == userId && it.DoorId == doorId);
         
         public async Task<Permission> CreateAsync(PermissionDTO door)
         {

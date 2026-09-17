@@ -1,7 +1,9 @@
+using ArduinoGatekeeperBackend.EntityFramework.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace ArduinoGatekeeperBackend.Controllers
@@ -16,15 +18,11 @@ namespace ArduinoGatekeeperBackend.Controllers
         }
 
         [EnableQuery]
-        public IActionResult Get() => Ok(_permissionsService.GetAll());
+        public IQueryable<Permission> Get() => _permissionsService.GetAll();
 
         [EnableQuery]
         [HttpGet("api/Permissions(UserId={keyUserId},DoorId={keyDoorId})")]
-        public async Task<IActionResult> Get([FromODataUri] int keyUserId, [FromODataUri] int keyDoorId)
-        {
-            var result = await _permissionsService.GetByUserAndDoorIdAsync(keyUserId, keyDoorId);
-            return (result is not null ? Ok(result) : NotFound());
-        }
+        public SingleResult<Permission?> Get([FromODataUri] int keyUserId, [FromODataUri] int keyDoorId) => SingleResult.Create<Permission?>(_permissionsService.GetByUserAndDoorIdAsync(keyUserId, keyDoorId));
 
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] PermissionDTO permission)

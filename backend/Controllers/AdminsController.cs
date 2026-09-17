@@ -1,7 +1,9 @@
+using ArduinoGatekeeperBackend.EntityFramework.Models;
 using ArduinoGatekeeperBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OData.Formatter;
 using Microsoft.AspNetCore.OData.Query;
+using Microsoft.AspNetCore.OData.Results;
 using Microsoft.AspNetCore.OData.Routing.Controllers;
 
 namespace ArduinoGatekeeperBackend.Controllers
@@ -16,14 +18,10 @@ namespace ArduinoGatekeeperBackend.Controllers
         }
 
         [EnableQuery]
-        public IActionResult Get() => Ok(_adminsService.GetAll());
+        public IQueryable<Admin> Get() => _adminsService.GetAll();
 
         [EnableQuery]
-        public async Task<IActionResult> Get([FromODataUri] int key)
-        {
-            var result = await _adminsService.GetByIdAsync(key);
-            return (result is not null ? Ok(result) : NotFound());
-        }
+        public SingleResult<Admin?> Get([FromODataUri] int key) => SingleResult.Create<Admin?>(_adminsService.GetByIdAsync(key));
 
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] AdminDTO admin)

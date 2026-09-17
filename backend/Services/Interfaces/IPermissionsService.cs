@@ -5,7 +5,7 @@ namespace ArduinoGatekeeperBackend.Services.Interfaces
     public interface IPermissionsService
     {
         public IQueryable<Permission> GetAll();
-        public Task<Permission?> GetByUserAndDoorIdAsync(int userId, int doorId);
+        public IQueryable<Permission> GetByUserAndDoorIdAsync(int userId, int doorId);
         public Task<Permission> CreateAsync(PermissionDTO door);
         public Task DeleteAsync(int userId, int doorId);
     }
