@@ -25,10 +25,12 @@ private slots:
     void fetchData();
     void createUser();
     void editUser();
+    void deleteUser();
     void handleUserDataToEdit(const QString& entity, const QJsonObject& result);
     void handleCollectionRequestResult(const QString& entity, const QJsonArray& results);
     void handleUserCreationResult(const QString& entity, const QJsonObject& result);
     void handleUserEditResult(const QString& entity, const QJsonObject& result);
+    void handleUserDeleteResult(const QString& entity);
     void requestFailed(const QString& entity, const QString& message);
     void handleRowSelectionChange();
 

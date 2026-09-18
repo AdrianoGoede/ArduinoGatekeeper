@@ -20,10 +20,12 @@ UsersDialog::UsersDialog(const QString* baseUrl, const QSslConfiguration* sslCon
     connect(ui->pbRefresh, &QAbstractButton::clicked, this, &UsersDialog::fetchData);
     connect(ui->pbAdd, &QAbstractButton::clicked, this, &UsersDialog::createUser);
     connect(ui->pbEdit, &QAbstractButton::clicked, this, &UsersDialog::editUser);
+    connect(ui->pbDelete, &QAbstractButton::clicked, this, &UsersDialog::deleteUser);
     connect(_odataClient, &ODataClient::getRequestFinished, this, &UsersDialog::handleUserDataToEdit);
     connect(_odataClient, &ODataClient::getCollectionRequestFinished, this, &UsersDialog::handleCollectionRequestResult);
     connect(_odataClient, &ODataClient::postRequestFinished, this, &UsersDialog::handleUserCreationResult);
     connect(_odataClient, &ODataClient::patchRequestFinished, this, &UsersDialog::handleUserEditResult);
+    connect(_odataClient, &ODataClient::deleteRequestFinished, this, &UsersDialog::handleUserDeleteResult);
     connect(_odataClient, &ODataClient::requestFailed, this, &UsersDialog::requestFailed);
 }
 
@@ -40,12 +42,14 @@ void UsersDialog::fetchData()
     toggleDialogEnabled();
 
     QMap<QString, QString> params = {
+        { "$filter", "Active eq true" },
         { "$select", "Id,Label" },
         { "$orderby", "Id asc" }
     };
     _odataClient->getRequest("Doors", params);
 
     params = {
+        { "$filter", "Active eq true" },
         { "$select", "Id,Label,CreatedAt" },
         { "$orderby", "Id asc" }
     };
@@ -72,6 +76,23 @@ void UsersDialog::editUser()
 
     toggleDialogEnabled();
     fetchUserToEdit(ui->twUsers->item(selectedItems.first()->row(), TableColumns::UserId)->text().toInt());
+}
+
+void UsersDialog::deleteUser()
+{
+    QList<QTableWidgetItem*> selectedItems = ui->twUsers->selectedItems();
+    if (selectedItems.isEmpty()) return;
+    int id = ui->twUsers->item(selectedItems.first()->row(), TableColumns::UserId)->text().toInt();
+
+    if (QMessageBox::question(
+        this,
+        "?",
+        QString("Are you sure you want to delete User '%1'?").arg(id),
+        (QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
+        QMessageBox::StandardButton::No
+    ) != QMessageBox::StandardButton::Yes) return;
+
+    _odataClient->deleteRequest("Users", id);
 }
 
 void UsersDialog::handleUserDataToEdit(const QString& entity, const QJsonObject& result)
@@ -115,6 +136,12 @@ void UsersDialog::handleUserEditResult(const QString& entity, const QJsonObject&
 {
     QMessageBox::information(this, {}, "User saved successfuly!", QMessageBox::StandardButton::Ok);
     toggleDialogEnabled();
+}
+
+void UsersDialog::handleUserDeleteResult(const QString& entity)
+{
+    fetchData();
+    QMessageBox::information(this, {}, "User deleted successfuly!", QMessageBox::StandardButton::Ok);
 }
 
 void UsersDialog::requestFailed(const QString& entity, const QString& message)

@@ -121,9 +121,10 @@ void ODataClient::handleReply(const QString& entity, QNetworkReply* reply, HttpM
         return;
     }
 
+    QByteArray payload = reply->readAll();
     QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(reply->readAll(), &error);
-    if (error.error != QJsonParseError::ParseError::NoError) {
+    QJsonDocument doc = QJsonDocument::fromJson(payload, &error);
+    if (!payload.isEmpty() && error.error != QJsonParseError::ParseError::NoError) {
         requestFailed(entity, error.errorString());
         return;
     }

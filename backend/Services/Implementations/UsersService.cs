@@ -73,7 +73,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             try
             {
                 var user = await _dbContext.Users.SingleOrDefaultAsync(it => it.Id == id) ?? throw new ArgumentException($"No record found with ID {id}");
-                _dbContext.Users.Remove(user);
+                user.Active = false;
                 await _dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

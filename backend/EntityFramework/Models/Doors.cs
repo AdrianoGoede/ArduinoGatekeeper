@@ -9,6 +9,8 @@ namespace ArduinoGatekeeperBackend.EntityFramework.Models
 
         public string Label { get; set; }
 
+        public bool Active { get; set; }
+
         public DateTime CreatedAt { get; set; }
 
         public ICollection<Permission> Permissions { get; set; } = new List<Permission>();

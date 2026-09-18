@@ -10,12 +10,14 @@ CREATE TABLE users (
     card_id VARCHAR(8) UNIQUE NOT NULL,
     card_key BYTEA NOT NULL DEFAULT '\x000000000000',
     label VARCHAR(200) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
 CREATE TABLE doors (
     id SERIAL NOT NULL PRIMARY KEY,
     label VARCHAR(100) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
