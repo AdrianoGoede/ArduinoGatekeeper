@@ -22,7 +22,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     _usersDialog = new UsersDialog(_baseUrl.get(), _sslConfiguration.get(), this);
     connect(ui->pbUsers, &QAbstractButton::clicked, this, &MainWindow::openUsersDialog);
 
-    _doorsDialog = new DoorsDialog(_sslConfiguration.get(), this);
+    _doorsDialog = new DoorsDialog(_baseUrl.get(), _sslConfiguration.get(), this);
     connect(ui->pbDoors, &QAbstractButton::clicked, this, &MainWindow::openDoorsDialog);
 }
 

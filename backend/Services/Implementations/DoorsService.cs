@@ -16,15 +16,15 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
         
-        public IQueryable<Door> GetAll() => _dbContext.Doors.AsNoTracking();
+        public IQueryable<Door> GetAll() => _dbContext.Doors.AsNoTracking().Where(it => it.Active);
 
-        public IQueryable<Door> GetByIdAsync(int id) => _dbContext.Doors.AsNoTracking().Where(it => it.Id == id);
+        public IQueryable<Door> GetByIdAsync(int id) => _dbContext.Doors.AsNoTracking().Where(it => it.Id == id && it.Active);
         
         public async Task<Door> CreateAsync(DoorDTO door)
         {
             try
             {
-                var newDoor = _dbContext.Doors.Add(new Door { Label = door.Label?.Trim() });
+                var newDoor = _dbContext.Doors.Add(new Door { Label = door.Label?.Trim(), Active = true, });
                 await _dbContext.SaveChangesAsync();
                 return newDoor.Entity;
             }
@@ -56,7 +56,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             try
             {
                 var door = await _dbContext.Doors.SingleOrDefaultAsync(it => it.Id == id) ?? throw new ArgumentException($"No record found with ID {id}");
-                _dbContext.Doors.Remove(door);
+                door.Active = false;
                 await _dbContext.SaveChangesAsync();
             }
             catch (Exception ex)

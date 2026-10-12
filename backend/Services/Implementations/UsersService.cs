@@ -16,9 +16,9 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
         
-        public IQueryable<User> GetAll() => _dbContext.Users.AsNoTracking();
+        public IQueryable<User> GetAll() => _dbContext.Users.AsNoTracking().Where(it => it.Active);
 
-        public IQueryable<User> GetByIdAsync(int id) => _dbContext.Users.AsNoTracking().Where(it => it.Id == id);
+        public IQueryable<User> GetByIdAsync(int id) => _dbContext.Users.AsNoTracking().Where(it => it.Id == id && it.Active);
         
         public async Task<User> CreateAsync(UserDTO user)
         {
@@ -28,6 +28,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
                     Label = user.Label?.Trim(),
                     CardId = user.CardId?.Trim(),
                     CardKey = Convert.FromBase64String(user.CardKey ?? string.Empty),
+                    Active = true,
                     Permissions = (user.AllowedDoors ?? []).Select(doorId => new Permission { DoorId = doorId }).ToArray()
                 });
                 await _dbContext.SaveChangesAsync();

@@ -64,6 +64,8 @@ qt_add_resources(ArduinoGatekeeperAdmin "Icons"
         resources/icons/user-minus.svg
         resources/icons/refresh-cw.svg
         resources/icons/folder.svg
+        resources/icons/minus-square.svg
+        resources/icons/plus-square.svg
 )
 
 install(SCRIPT ${deploy_script})

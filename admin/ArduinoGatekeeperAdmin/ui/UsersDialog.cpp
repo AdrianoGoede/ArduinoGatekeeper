@@ -42,14 +42,12 @@ void UsersDialog::fetchData()
     toggleDialogEnabled();
 
     QMap<QString, QString> params = {
-        { "$filter", "Active eq true" },
         { "$select", "Id,Label" },
         { "$orderby", "Id asc" }
     };
     _odataClient->getRequest("Doors", params);
 
     params = {
-        { "$filter", "Active eq true" },
         { "$select", "Id,Label,CreatedAt" },
         { "$orderby", "Id asc" }
     };
@@ -83,11 +81,12 @@ void UsersDialog::deleteUser()
     QList<QTableWidgetItem*> selectedItems = ui->twUsers->selectedItems();
     if (selectedItems.isEmpty()) return;
     int id = ui->twUsers->item(selectedItems.first()->row(), TableColumns::UserId)->text().toInt();
+    QString label = ui->twUsers->item(selectedItems.first()->row(), TableColumns::Label)->text();
 
     if (QMessageBox::question(
         this,
         "?",
-        QString("Are you sure you want to delete User '%1'?").arg(id),
+        QString("Are you sure you want to delete User '%1 - %2'?").arg(id).arg(label),
         (QMessageBox::StandardButton::Yes | QMessageBox::StandardButton::No),
         QMessageBox::StandardButton::No
     ) != QMessageBox::StandardButton::Yes) return;

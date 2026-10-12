@@ -10,5 +10,7 @@
         <file>icons/user-minus.svg</file>
         <file>icons/refresh-cw.svg</file>
         <file>icons/folder.svg</file>
+        <file>icons/minus-square.svg</file>
+        <file>icons/plus-square.svg</file>
     </qresource>
 </RCC>
