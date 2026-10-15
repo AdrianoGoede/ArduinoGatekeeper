@@ -20,7 +20,7 @@ struct UserData {
     QJsonObject toJson() const;
 };
 
-struct DoorData {
+struct UserDoorData {
     qint32 Id;
     QString Label;
 };
@@ -30,7 +30,7 @@ class UserManagementDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit UserManagementDialog(UserData& userData, const QList<DoorData>& doorData, QWidget* parent = nullptr);
+    explicit UserManagementDialog(UserData& userData, const QList<UserDoorData>& doorData, QWidget* parent = nullptr);
     ~UserManagementDialog();
 
 private slots:
@@ -40,7 +40,7 @@ private:
     Ui::UserManagementDialog* ui;
     UserData& _userData;
     void prepareTable();
-    void fillData(const QList<DoorData>& doorData);
+    void fillData(const QList<UserDoorData>& doorData);
     void setValidators();
     QWidget* createCheckboxWidget(bool checked, QWidget* parent = nullptr);
     bool getTableCheckBoxValue(int row);

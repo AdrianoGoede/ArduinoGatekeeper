@@ -133,6 +133,7 @@ void UsersDialog::handleUserCreationResult(const QString& entity, const QJsonObj
 
 void UsersDialog::handleUserEditResult(const QString& entity, const QJsonObject& result)
 {
+    fetchData();
     QMessageBox::information(this, {}, "User saved successfuly!", QMessageBox::StandardButton::Ok);
     toggleDialogEnabled();
 }
@@ -212,6 +213,6 @@ void UsersDialog::handleDoorsList(const QJsonArray& results)
     _doorData.clear();
     for (QJsonValueConstRef item : results) {
         QJsonObject obj = item.toObject();
-        _doorData += DoorData{ obj.value("Id").toInt(), obj.value("Label").toString() };
+        _doorData += UserDoorData{ obj.value("Id").toInt(), obj.value("Label").toString() };
     }
 }

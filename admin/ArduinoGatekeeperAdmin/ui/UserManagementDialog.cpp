@@ -11,7 +11,7 @@ enum TableColumns {
     ColumnCount
 };
 
-UserData::UserData(const QJsonObject &content) {
+UserData::UserData(const QJsonObject& content) {
     Id = content.value("Id").toInt(0);
     Label = content.value("Id").toString();
     CardId = content.value("CardId").toString({});
@@ -37,7 +37,7 @@ QJsonObject UserData::toJson() const {
     return json;
 }
 
-UserManagementDialog::UserManagementDialog(UserData& userData, const QList<DoorData>& doorData, QWidget* parent) : QDialog(parent), ui(new Ui::UserManagementDialog), _userData(userData)
+UserManagementDialog::UserManagementDialog(UserData& userData, const QList<UserDoorData>& doorData, QWidget* parent) : QDialog(parent), ui(new Ui::UserManagementDialog), _userData(userData)
 {
     ui->setupUi(this);
     prepareTable();
@@ -93,7 +93,7 @@ void UserManagementDialog::prepareTable()
     ui->twPermissions->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
 }
 
-void UserManagementDialog::fillData(const QList<DoorData>& doorData)
+void UserManagementDialog::fillData(const QList<UserDoorData>& doorData)
 {
     this->setWindowTitle(_userData.Id > 0 ? "Edit User" : "New User");
     ui->leUserId->setText((_userData.Id > 0) ? QString::number(_userData.Id) : "-");
@@ -108,7 +108,7 @@ void UserManagementDialog::fillData(const QList<DoorData>& doorData)
 
     int row = 0;
     ui->twPermissions->setRowCount(doorData.size());
-    for (const DoorData& door : doorData) {
+    for (const UserDoorData& door : doorData) {
         ui->twPermissions->setItem(row, TableColumns::DoorId, new QTableWidgetItem(QString::number(door.Id)));
         ui->twPermissions->setItem(row, TableColumns::Label, new QTableWidgetItem(door.Label));
 

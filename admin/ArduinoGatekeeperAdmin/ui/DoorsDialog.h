@@ -20,8 +20,12 @@ protected:
 
 private slots:
     void fetchData();
+    void createDoor();
+    void editDoor();
     void deleteDoor();
     void handleCollectionRequestResult(const QString& entity, const QJsonArray& results);
+    void handleDoorCreationResult(const QString& entity, const QJsonObject& result);
+    void handleDoorEditResult(const QString& entity, const QJsonObject& result);
     void handleDoorDeleteResult(const QString& entity);
     void requestFailed(const QString& entity, const QString& message);
     void handleRowSelectionChange();

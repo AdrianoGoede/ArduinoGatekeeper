@@ -37,7 +37,7 @@ private slots:
 private:
     Ui::UsersDialog* ui;
     ODataClient* _odataClient = nullptr;
-    QList<DoorData> _doorData;
+    QList<UserDoorData> _doorData;
     void prepareTable();
     void toggleDialogEnabled();
     void fetchUserToEdit(int id);

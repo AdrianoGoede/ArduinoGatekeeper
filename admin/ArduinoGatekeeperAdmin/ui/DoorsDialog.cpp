@@ -1,5 +1,6 @@
 #include "DoorsDialog.h"
 #include "ui_DoorsDialog.h"
+#include "DoorManagementDialog.h"
 #include <QMessageBox>
 
 enum TableColumns {
@@ -18,8 +19,12 @@ DoorsDialog::DoorsDialog(const QString* baseUrl, const QSslConfiguration* sslCon
 
     connect(ui->twDoors, &QTableWidget::itemSelectionChanged, this, &DoorsDialog::handleRowSelectionChange);
     connect(ui->pbRefresh, &QAbstractButton::clicked, this, &DoorsDialog::fetchData);
+    connect(ui->pbAdd, &QAbstractButton::clicked, this, &DoorsDialog::createDoor);
+    connect(ui->pbEdit, &QAbstractButton::clicked, this, &DoorsDialog::editDoor);
     connect(ui->pbDelete, &QAbstractButton::clicked, this, &DoorsDialog::deleteDoor);
     connect(_odataClient, &ODataClient::getCollectionRequestFinished, this, &DoorsDialog::handleCollectionRequestResult);
+    connect(_odataClient, &ODataClient::postRequestFinished, this, &DoorsDialog::handleDoorCreationResult);
+    connect(_odataClient, &ODataClient::patchRequestFinished, this, &DoorsDialog::handleDoorEditResult);
     connect(_odataClient, &ODataClient::deleteRequestFinished, this, &DoorsDialog::handleDoorDeleteResult);
     connect(_odataClient, &ODataClient::requestFailed, this, &DoorsDialog::requestFailed);
 }
@@ -41,6 +46,40 @@ void DoorsDialog::fetchData()
         { "$orderby", "Id asc" }
     };
     _odataClient->getRequest("Doors", params);
+}
+
+void DoorsDialog::createDoor()
+{
+    try{
+        DoorData door;
+        DoorManagementDialog dialog(door, this);
+        if (dialog.exec() == QDialog::DialogCode::Accepted)
+            _odataClient->postRequest("Doors", door.toJson());
+    }
+    catch (const std::runtime_error& error) {
+        QMessageBox::critical(this, "Error", error.what(), QMessageBox::StandardButton::Ok);
+    }
+}
+
+void DoorsDialog::editDoor()
+{
+    try{
+        QList<QTableWidgetItem*> selectedItems = ui->twDoors->selectedItems();
+        if (selectedItems.isEmpty()) return;
+
+        DoorData door;
+        door.Id = ui->twDoors->item(selectedItems.first()->row(), TableColumns::DoorId)->text().toInt();
+        door.Label = ui->twDoors->item(selectedItems.first()->row(), TableColumns::Label)->text();
+
+        DoorManagementDialog dialog(door, this);
+        if (dialog.exec() == QDialog::DialogCode::Accepted) {
+            toggleDialogEnabled();
+            _odataClient->patchRequest("Doors", door.Id, door.toJson());
+        }
+    }
+    catch (const std::runtime_error& error) {
+        QMessageBox::critical(this, "Error", error.what(), QMessageBox::StandardButton::Ok);
+    }
 }
 
 void DoorsDialog::deleteDoor()
@@ -77,6 +116,19 @@ void DoorsDialog::handleCollectionRequestResult(const QString& entity, const QJs
         row++;
     }
 
+    toggleDialogEnabled();
+}
+
+void DoorsDialog::handleDoorCreationResult(const QString& entity, const QJsonObject& result)
+{
+    fetchData();
+    QMessageBox::information(this, {}, QString("Door created successfuly with ID '%1'").arg(result.value("Id").toInt()), QMessageBox::StandardButton::Ok);
+}
+
+void DoorsDialog::handleDoorEditResult(const QString& entity, const QJsonObject& result)
+{
+    fetchData();
+    QMessageBox::information(this, {}, "Door saved successfuly!", QMessageBox::StandardButton::Ok);
     toggleDialogEnabled();
 }
 
