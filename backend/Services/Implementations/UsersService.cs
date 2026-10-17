@@ -1,5 +1,6 @@
 using ArduinoGatekeeperBackend.EntityFramework;
 using ArduinoGatekeeperBackend.EntityFramework.Models;
+using ArduinoGatekeeperBackend.Events;
 using ArduinoGatekeeperBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,11 +9,13 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
     public class UsersService : IUsersService
     {
         private readonly ArduinoGatekeeperContext _dbContext;
+        private readonly IEventBus _eventBus;
         private readonly ILogger<IUsersService> _logger;
 
-        public UsersService(ArduinoGatekeeperContext dbContext, ILogger<IUsersService> logger)
+        public UsersService(ArduinoGatekeeperContext dbContext, IEventBus eventBus, ILogger<IUsersService> logger)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
         
@@ -31,7 +34,10 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
                     Active = true,
                     Permissions = (user.AllowedDoors ?? []).Select(doorId => new Permission { DoorId = doorId }).ToArray()
                 });
+
                 await _dbContext.SaveChangesAsync();
+                _eventBus.Publish(new UserCreatedEvent(newUser.Entity));
+                
                 return newUser.Entity;
             }
             catch (Exception ex)
@@ -73,9 +79,10 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
         {
             try
             {
-                var user = await _dbContext.Users.SingleOrDefaultAsync(it => it.Id == id) ?? throw new ArgumentException($"No record found with ID {id}");
+                var user = await _dbContext.Users.Include(it => it.Permissions).SingleOrDefaultAsync(it => it.Id == id) ?? throw new ArgumentException($"No record found with ID {id}");
                 user.Active = false;
                 await _dbContext.SaveChangesAsync();
+                _eventBus.Publish(new UserRemovedEvent(user));
             }
             catch (Exception ex)
             {

@@ -1,10 +1,8 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using ArduinoGatekeeperBackend.EntityFramework.Models;
+using ArduinoGatekeeperBackend.Events;
 using ArduinoGatekeeperBackend.Mqtt.Models;
-using ArduinoGatekeeperBackend.Services.Interfaces;
-using ArduinoGatekeeperBackend.Websocket;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using MQTTnet;
 using Newtonsoft.Json;
 
@@ -13,17 +11,19 @@ namespace ArduinoGatekeeperBackend.Mqtt
     public class MqttService : IHostedService
     {
         private readonly IConfiguration _config;
-        private readonly IServiceScopeFactory _scopeFactory;
-        private readonly IHubContext<LogHub> _hubContext;
+        private readonly IEventBus _eventBus;
         private readonly ILogger<MqttService> _logger;
         private IMqttClient? _client;
 
-        public MqttService(IConfiguration config, IServiceScopeFactory scopeFactory, IHubContext<LogHub> hubContext, ILogger<MqttService> logger)
+        public MqttService(IConfiguration config, IEventBus eventBus, ILogger<MqttService> logger)
         {
             _config = config ?? throw new ArgumentNullException(nameof(config));
-            _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
-            _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+            _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            _eventBus.Subscribe<UserCreatedEvent>(async e => await HandleUserCreatedAsync(e));
+            _eventBus.Subscribe<UserRemovedEvent>(async e => await HandleUserRemovedAsync(e));
+            _eventBus.Subscribe<SyncUsersToDoorRequestedEvent>(async e => await HandleSyncUsersToDoorRequestAsync(e));
         }
         
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -31,19 +31,19 @@ namespace ArduinoGatekeeperBackend.Mqtt
             try
             {
                 _client = new MqttClientFactory().CreateMqttClient();
+                _client.ApplicationMessageReceivedAsync += HandleIncomingMessageAsync;
+                _client.ConnectedAsync += HandleConnectedAsync;
+                _client.DisconnectedAsync += HandleDisconnectedAsync;
 
                 var clientCert = X509CertificateLoader.LoadCertificateFromFile(_config.GetValue<string>("Ssl:ServerCert")!);
                 using var clientKey = ECDsa.Create();
                 clientKey.ImportFromPem(File.ReadAllText(_config.GetValue<string>("Ssl:ServerKey")!));
-
-                _client.ApplicationMessageReceivedAsync += HandleIncomingMessageAsync;
-                _client.ConnectedAsync += HandleConnectedAsync;
-                _client.DisconnectedAsync += HandleDisconnectedAsync;
             
                 var options = new MqttClientOptionsBuilder()
                     .WithTcpServer(_config.GetValue<string>("MqttBroker:Host"), _config.GetValue<int>("MqttBroker:Port", 8883))
                     .WithTlsOptions(tls => {
                         tls.UseTls(true);
+                        tls.WithSslProtocols(System.Security.Authentication.SslProtocols.Tls13);
                         tls.WithCertificateValidationHandler(ctx => {
                             ctx.Chain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
                             ctx.Chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
@@ -134,30 +134,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
                 var status = JsonConvert.DeserializeObject<DeviceStatus>(payload);
                 if (status is null) 
                     throw new JsonException($"Malformed JSON received from '{deviceId}'");
-                var deviceIdNum = int.Parse(deviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty));
-
-                await using var scope = _scopeFactory.CreateAsyncScope();
-                var doorLogsService = scope.ServiceProvider.GetRequiredService<IDoorLogsService>();
-                var result = await doorLogsService.CreateAsync(new DoorLogDTO {
-                    DoorId = deviceIdNum,
-                    Online = status.Online,
-                    CreatedAt = (status.Timestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(status.Timestamp ?? 0).UtcDateTime : null)
-                });
-
-                await _hubContext.Clients.All.SendAsync("NewStatusEntry", result);
-
-                if (!status.Online) return;
-                var addUsersTopic = _config.GetValue<string>("MqttBroker:Topics:AddUsers")?.Replace("+", deviceId)?.Trim() ?? throw new ArgumentNullException("AddUsers topic not informed");
-                var pageSize = _config.GetValue<int?>("MqttBroker:AddUsersPageSize") ?? throw new ArgumentNullException("AddUsersPageSize not informed");
-
-                var permissionsService = scope.ServiceProvider.GetRequiredService<IPermissionsService>();
-                var authUsers = await permissionsService.GetAll().Include(it => it.User).Where(it => it.DoorId == deviceIdNum).Select(it => it.User).Select(usr => new { usr.CardId, usr.CardKey }).ToArrayAsync();
-                foreach (var page in authUsers.Chunk(pageSize))
-                    await _client.PublishStringAsync(
-                        addUsersTopic,
-                        JsonConvert.SerializeObject(page.Select(it => new AuthorizedUser { Uid = it.CardId, Key = it.CardKey.Select(it => Convert.ToInt32(it)) })),
-                        MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce
-                    );
+                _eventBus.Publish(new DoorStatusEvent(deviceId, status));
             }
             catch (Exception ex) { _logger.LogError(ex.InnerException?.Message ?? ex.Message); }
         }
@@ -168,20 +145,51 @@ namespace ArduinoGatekeeperBackend.Mqtt
             {
                 if (string.IsNullOrWhiteSpace(deviceId)) return;
                 var scan = JsonConvert.DeserializeObject<Scan>(payload);
-                if (scan is null) return;
-
-                await using var scope = _scopeFactory.CreateAsyncScope();
-                var accessLogsService = scope.ServiceProvider.GetRequiredService<IAccessLogsService>();
-                var result = await accessLogsService.CreateAsync(new AccessLogDTO {
-                    CardId = (scan.CardId ?? string.Empty),
-                    DoorId = int.Parse(deviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
-                    Granted = scan.Granted,
-                    CreatedAt = (scan.Timestamp is not null ? DateTimeOffset.FromUnixTimeSeconds(scan.Timestamp ?? 0).UtcDateTime : null)
-                });
-
-                await _hubContext.Clients.All.SendAsync("NewLogEntry", result);
+                if (scan is null)
+                    throw new JsonException($"Malformed JSON received from '{deviceId}'");
+                _eventBus.Publish(new DoorScanEvent(deviceId, scan));
             }
             catch (Exception ex) { _logger.LogError(ex.InnerException?.Message ?? ex.Message); }
+        }
+
+        private async Task HandleUserCreatedAsync(UserCreatedEvent e)
+        {
+            foreach (var permission in e.User.Permissions)
+                await AddOrUpdateUsersToDoorAsync([e.User], permission.DoorId);
+        }
+
+        private async Task HandleUserRemovedAsync(UserRemovedEvent e)
+        {
+            foreach (var permission in e.User.Permissions)
+                await RemoveUsersFromDoorAsync([e.User], permission.DoorId);
+        }
+
+        private async Task HandleSyncUsersToDoorRequestAsync(SyncUsersToDoorRequestedEvent e) => await AddOrUpdateUsersToDoorAsync(e.Users, e.doorId);
+
+        private async Task AddOrUpdateUsersToDoorAsync(IEnumerable<User> users, int doorId)
+        {
+            var topic = _config.GetValue<string>("MqttBroker:Topics:AddUsers")
+                               .Replace("+", $"{_config.GetValue<string>("MqttBroker:DeviceIdPrefix")}{doorId}");
+            var pageSize = _config.GetValue<int?>("MqttBroker:AddUsersPageSize") ?? throw new ArgumentNullException("AddUsersPageSize not informed");
+
+            foreach (var page in users.Chunk(pageSize))
+            {
+                var payload = JsonConvert.SerializeObject(page.Select(user => new AuthorizedUser { Uid = user.CardId, Key = user.CardKey.Select(it => Convert.ToInt32(it)) }));
+                await _client.PublishStringAsync(topic, payload, MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
+            }
+        }
+
+        private async Task RemoveUsersFromDoorAsync(IEnumerable<User> users, int doorId)
+        {
+            var topic = _config.GetValue<string>("MqttBroker:Topics:RemoveUsers")
+                               .Replace("+", $"{_config.GetValue<string>("MqttBroker:DeviceIdPrefix")}{doorId}");
+            var pageSize = _config.GetValue<int?>("MqttBroker:AddUsersPageSize") ?? throw new ArgumentNullException("AddUsersPageSize not informed");
+
+            foreach (var page in users.Chunk(pageSize))
+            {
+                var payload = JsonConvert.SerializeObject(page.Select(user => new { Uid = user.CardId }));
+                await _client.PublishStringAsync(topic, payload, MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
+            }
         }
     }
 }
