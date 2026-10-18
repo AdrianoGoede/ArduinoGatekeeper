@@ -22,6 +22,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _eventBus.Subscribe<UserCreatedEvent>(async e => await HandleUserCreatedAsync(e));
+            _eventBus.Subscribe<UserEditedEvent>(async e => await HandleUserEditedAsync(e));
             _eventBus.Subscribe<UserRemovedEvent>(async e => await HandleUserRemovedAsync(e));
             _eventBus.Subscribe<SyncUsersToDoorRequestedEvent>(async e => await HandleSyncUsersToDoorRequestAsync(e));
         }
@@ -158,19 +159,34 @@ namespace ArduinoGatekeeperBackend.Mqtt
                 await AddOrUpdateUsersToDoorAsync([e.User], permission.DoorId);
         }
 
+        private async Task HandleUserEditedAsync(UserEditedEvent e)
+        {
+            if (_client is null || !_client.IsConnected) return;
+            
+            var newPermissions = e.User.Permissions.Select(it => it.DoorId);
+            var doorsToRemoveFrom = ((e.User.CardId == e.OldCardId) ? e.OldPermissions.Except(newPermissions) : e.OldPermissions).Distinct();
+            foreach (var doorId in doorsToRemoveFrom)
+                await RemoveUsersFromDoorAsync([e.OldCardId], doorId);
+
+            foreach (var doorId in newPermissions)
+                await AddOrUpdateUsersToDoorAsync([e.User], doorId);
+        }
+
         private async Task HandleUserRemovedAsync(UserRemovedEvent e)
         {
+            if (_client is null || !_client.IsConnected) return;
             foreach (var permission in e.User.Permissions)
                 await RemoveUsersFromDoorAsync([e.User], permission.DoorId);
         }
 
-        private async Task HandleSyncUsersToDoorRequestAsync(SyncUsersToDoorRequestedEvent e) => await AddOrUpdateUsersToDoorAsync(e.Users, e.doorId);
+        private async Task HandleSyncUsersToDoorRequestAsync(SyncUsersToDoorRequestedEvent e) => await AddOrUpdateUsersToDoorAsync(e.Users, e.DoorId);
 
         private async Task AddOrUpdateUsersToDoorAsync(IEnumerable<User> users, int doorId)
         {
+            if (_client is null || !_client.IsConnected) return;
             var topic = _config.GetValue<string>("MqttBroker:Topics:AddUsers")
                                .Replace("+", $"{_config.GetValue<string>("MqttBroker:DeviceIdPrefix")}{doorId}");
-            var pageSize = _config.GetValue<int?>("MqttBroker:AddUsersPageSize") ?? throw new ArgumentNullException("AddUsersPageSize not informed");
+            var pageSize = _config.GetValue<int?>("MqttBroker:UsersSyncPageSize") ?? throw new ArgumentNullException("UsersSyncPageSize not informed");
 
             foreach (var page in users.Chunk(pageSize))
             {
@@ -179,15 +195,18 @@ namespace ArduinoGatekeeperBackend.Mqtt
             }
         }
 
-        private async Task RemoveUsersFromDoorAsync(IEnumerable<User> users, int doorId)
+        private async Task RemoveUsersFromDoorAsync(IEnumerable<User> users, int doorId) => await RemoveUsersFromDoorAsync(users.Select(it => it.CardId), doorId);
+
+        private async Task RemoveUsersFromDoorAsync(IEnumerable<string> cardIds, int doorId)
         {
+            if (_client is null || !_client.IsConnected) return;
             var topic = _config.GetValue<string>("MqttBroker:Topics:RemoveUsers")
                                .Replace("+", $"{_config.GetValue<string>("MqttBroker:DeviceIdPrefix")}{doorId}");
-            var pageSize = _config.GetValue<int?>("MqttBroker:AddUsersPageSize") ?? throw new ArgumentNullException("AddUsersPageSize not informed");
+            var pageSize = _config.GetValue<int?>("MqttBroker:UsersSyncPageSize") ?? throw new ArgumentNullException("UsersSyncPageSize not informed");
 
-            foreach (var page in users.Chunk(pageSize))
+            foreach (var page in cardIds.Chunk(pageSize))
             {
-                var payload = JsonConvert.SerializeObject(page.Select(user => new { Uid = user.CardId }));
+                var payload = JsonConvert.SerializeObject(page.Select(cardId => new { Uid = cardId }));
                 await _client.PublishStringAsync(topic, payload, MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
             }
         }

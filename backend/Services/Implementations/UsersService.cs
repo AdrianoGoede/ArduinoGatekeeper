@@ -52,6 +52,9 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             try
             {
                 var existing = await _dbContext.Users.Include(it => it.Permissions).SingleOrDefaultAsync(it => it.Id == id) ?? throw new ArgumentException($"No record found with ID {id}");
+                var oldCardId = existing.CardId;
+                var oldPermissions = existing.Permissions.Select(it => it.DoorId).ToArray();
+                
                 existing.Label = (modified.Label ?? existing.Label);
                 existing.CardId = (modified.CardId ?? existing.CardId);
                 existing.CardKey = (!string.IsNullOrWhiteSpace(modified.CardKey) ? Convert.FromBase64String(modified.CardKey) : existing.CardKey);
@@ -66,6 +69,8 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
                     existing.Permissions.Add(new Permission { DoorId = doorId });
 
                 await _dbContext.SaveChangesAsync();
+                _eventBus.Publish(new UserEditedEvent(existing, oldCardId, oldPermissions));
+
                 return existing;
             }
             catch (Exception ex)
