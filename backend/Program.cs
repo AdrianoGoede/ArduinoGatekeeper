@@ -18,6 +18,7 @@ using ArduinoGatekeeperBackend.Mqtt;
 using ArduinoGatekeeperBackend.Websocket;
 using System.Security.Cryptography;
 using Serilog;
+using ArduinoGatekeeperBackend.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,9 +85,13 @@ builder.Services.AddAuthorization();
 
 // SignalR — real-time push to log analyzer
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IDashboardNotifier, DashboardNotifier>();
 
 // MQTT background service
 builder.Services.AddHostedService<MqttService>();
+
+// Event Bus
+builder.Services.AddSingleton<IEventBus, EventBus>();
 
 // User list publisher — republishes UserList to broker on user changes
 builder.Services.AddScoped<IAdminsService, AdminsService>();
@@ -126,6 +131,9 @@ builder.WebHost.ConfigureKestrel(options => {
 });
 
 var app = builder.Build();
+
+// Force instantiation so constructor subscriptions register
+app.Services.GetRequiredService<IDashboardNotifier>();
 
 // Middleware pipeline
 app.UseHttpsRedirection();

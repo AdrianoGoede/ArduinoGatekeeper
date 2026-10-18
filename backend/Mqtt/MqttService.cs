@@ -135,7 +135,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
                 var status = JsonConvert.DeserializeObject<DeviceStatus>(payload);
                 if (status is null) 
                     throw new JsonException($"Malformed JSON received from '{deviceId}'");
-                _eventBus.Publish(new DoorStatusEvent(deviceId, status));
+                _eventBus.Publish(new DoorStatusReceivedEvent(deviceId, status));
             }
             catch (Exception ex) { _logger.LogError(ex.InnerException?.Message ?? ex.Message); }
         }
@@ -148,7 +148,7 @@ namespace ArduinoGatekeeperBackend.Mqtt
                 var scan = JsonConvert.DeserializeObject<Scan>(payload);
                 if (scan is null)
                     throw new JsonException($"Malformed JSON received from '{deviceId}'");
-                _eventBus.Publish(new DoorScanEvent(deviceId, scan));
+                _eventBus.Publish(new DoorScanReceivedEvent(deviceId, scan));
             }
             catch (Exception ex) { _logger.LogError(ex.InnerException?.Message ?? ex.Message); }
         }

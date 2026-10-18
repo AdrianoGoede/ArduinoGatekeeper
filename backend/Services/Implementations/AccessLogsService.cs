@@ -20,7 +20,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _eventBus.Subscribe<DoorScanEvent>(async e => await HandleScanEventAsync(e));
+            _eventBus.Subscribe<DoorScanReceivedEvent>(async e => await HandleScanEventAsync(e));
         }
         
         public IQueryable<AccessLog> GetAll() => _dbContext.AccessLogs.AsNoTracking();
@@ -39,7 +39,10 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
                     Granted = (log.Granted ?? false),
                     CreatedAt = (log.CreatedAt ?? DateTime.UtcNow)
                 });
+
                 await _dbContext.SaveChangesAsync();
+                _eventBus.Publish(new DoorScanRecordedEvent(newLog.Entity));
+
                 return newLog.Entity;
             }
             catch (Exception ex)
@@ -49,7 +52,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             }
         }
 
-        private async Task HandleScanEventAsync(DoorScanEvent e) => await CreateAsync(new AccessLogDTO {
+        private async Task HandleScanEventAsync(DoorScanReceivedEvent e) => await CreateAsync(new AccessLogDTO {
             CardId = (e.Scan.CardId ?? string.Empty),
             DoorId = int.Parse(e.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty)),
             Granted = e.Scan.Granted,

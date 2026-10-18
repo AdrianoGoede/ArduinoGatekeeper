@@ -20,7 +20,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _eventBus.Subscribe<DoorStatusEvent>(async e => await HandleDoorStatusEventAsync(e));
+            _eventBus.Subscribe<DoorStatusReceivedEvent>(async e => await HandleDoorStatusEventAsync(e));
         }
         
         public IQueryable<DoorLog> GetAll() => _dbContext.DoorLogs.AsNoTracking();
@@ -36,7 +36,10 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
                     Online = (log.Online ?? false),
                     CreatedAt = (log.CreatedAt ?? DateTime.UtcNow)
                 });
+
                 await _dbContext.SaveChangesAsync();
+                _eventBus.Publish(new DoorStatusRecordedEvent(newLog.Entity));
+
                 return newLog.Entity;
             }
             catch (Exception ex)
@@ -46,7 +49,7 @@ namespace ArduinoGatekeeperBackend.Services.Implementations
             }
         }
 
-        private async Task HandleDoorStatusEventAsync(DoorStatusEvent e)
+        private async Task HandleDoorStatusEventAsync(DoorStatusReceivedEvent e)
         {
             var deviceIdNum = int.Parse(e.DeviceId.Replace(_config.GetValue<string>("MqttBroker:DeviceIdPrefix")!, string.Empty));
             var result = await CreateAsync(new DoorLogDTO {
